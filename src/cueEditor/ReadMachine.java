@@ -7,21 +7,22 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ReadMachine {
-	Scanner input;
-	File file;
-	Pattern pattern;
-	Matcher matcher;
-	String[] album;
-	String[][] track;
-	ArrayList<String> main = new ArrayList<String>();
-	ArrayList<String> trackTitle = new ArrayList<String>();
-	ArrayList<String> trackPerformer = new ArrayList<String>();
-	ArrayList<String> trackMinuteIndex = new ArrayList<String>();
-	ArrayList<String> trackSecondIndex = new ArrayList<String>();
-	ArrayList<String> trackFrameIndex = new ArrayList<String>();
-	boolean isBeforeTrackOne = true;
+	private Scanner input;
+	private File file;
+	private Pattern pattern;
+	private Matcher matcher;
+	private String[] album ;
+	private String[][] track;
+	private ArrayList<String> main = new ArrayList<String>();
+	private ArrayList<String> trackTitle = new ArrayList<String>();
+	private ArrayList<String> trackPerformer = new ArrayList<String>();
+	private ArrayList<String> trackMinuteIndex = new ArrayList<String>();
+	private ArrayList<String> trackSecondIndex = new ArrayList<String>();
+	private ArrayList<String> trackFrameIndex = new ArrayList<String>();
+	private boolean isBeforeTrackOne = true;
 	
 	public ReadMachine(String path){
+		album = new String[5];
 		try{
 			file = new File(path);
 			input = new Scanner(file,"UTF-8");
@@ -37,31 +38,30 @@ public class ReadMachine {
 			}
 			if(s.matches("\\s*TRACK\\s*01\\s*AUDIO\\s*")){
 				isBeforeTrackOne = false;
-				System.out.println("hi");
-			}
-				
+			}		
 		}
+		transToArray();
 	}
 	
-	public void mainInfo(String s){
+	private void mainInfo(String s){
 		pattern = Pattern.compile("TITLE\\s*\".*\"");
 		matcher = pattern.matcher(s);
 		while(matcher.find()){
-			main.add(takeFromIt(matcher.group()));
+			album[0] = takeFromIt(matcher.group());
 		}
 		pattern = Pattern.compile("PERFORMER\\s*\".*\"");
 		matcher = pattern.matcher(s);
 		while(matcher.find()){
-			main.add(takeFromIt(matcher.group()));
+			album[1] = takeFromIt(matcher.group());
 		}
 		pattern = Pattern.compile("FILE\\s*\".*\"");
 		matcher = pattern.matcher(s);
 		while(matcher.find()){
-			main.add(takeFromIt(matcher.group()));
+			album[2] = takeFromIt(matcher.group());
 		}
 	}
 	
-	public void trackInfo(String s){
+	private void trackInfo(String s){
 		pattern = Pattern.compile("TITLE\\s*\".*\"");
 		matcher = pattern.matcher(s);
 		while(matcher.find()){
@@ -79,7 +79,7 @@ public class ReadMachine {
 		}
 	}
 	
-	public String takeFromIt(String s){
+	private String takeFromIt(String s){
 		String temp = "";
 		pattern = Pattern.compile("(?<=\").*(?=\")");
 		matcher = pattern.matcher(s);
@@ -89,19 +89,16 @@ public class ReadMachine {
 		return temp;
 	}
 	
-	public void addToIndex(String s){
+	private void addToIndex(String s){
 		String[] temp = s.split(":");
 		trackMinuteIndex.add(temp[0].substring(temp[0].length()-2));
 		trackSecondIndex.add(temp[1]);
 		trackFrameIndex.add(temp[2]);
 	}
 	
-	public void transToArray(){
-		album = new String[main.size()];
+	private void transToArray(){
 		track = new String[trackTitle.size()][5];
-		for(int i = 0; i <main.size(); i++){
-			album[i] = main.get(i);
-		}
+		
 		for(int i = 0; i < trackTitle.size() ; i++){
 			track[i][0] = trackTitle.get(i);
 			track[i][1] = trackPerformer.get(i);
@@ -111,14 +108,18 @@ public class ReadMachine {
 		}
 	}
 	
+	public String[] getAlbumInfo(){
+		return album;
+	}
+	
+	public String[][] getTrackInfo(){
+		return track;
+	}
 	
 	public static void main(String[] args){
 		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/test.cue");
 		System.out.println(a.main);
-		a.transToArray();
-		for(String s : a.album){
-			System.out.println(s);
-		}
+		
 		for(String[] ss : a.track){
 			for(String s : ss){
 				System.out.println(s);
