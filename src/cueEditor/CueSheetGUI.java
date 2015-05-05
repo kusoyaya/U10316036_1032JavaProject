@@ -38,10 +38,11 @@ public class CueSheetGUI extends JFrame {
 	private JTextField albumFileField;
 	private JScrollPane trackArea;
 	private JTable trackTable;
+	private MyTableModel trackTableModel;
 	private String filePath = "";
 	private String[] albumInfo;
-	private String[][] trackInfo;
-	private String[] row = {"歌名","演出者","分鐘","秒數","幀數"};
+	private Object[][] trackInfo;
+	private String[] row = {"曲序","歌名","演出者","分鐘","秒數","幀數"};
 	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
 	private boolean isLoadFile = false;
 
@@ -65,7 +66,7 @@ public class CueSheetGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public CueSheetGUI() {
-		setTitle("SimpleCueEditor V0");
+		setTitle("SimpleCueEditor v0.1");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 800, 600);
@@ -76,7 +77,6 @@ public class CueSheetGUI extends JFrame {
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
 		JPanel albumArea = new JPanel();
-		albumArea.setBounds(new Rectangle(0, 0, 600, 200));
 		contentPane.add(albumArea);
 		
 		loadButton = new JButton("讀取檔案");
@@ -91,16 +91,20 @@ public class CueSheetGUI extends JFrame {
 				if (result == JFileChooser.APPROVE_OPTION) {
 					selectedFile = fileChooser.getSelectedFile();
 				}
-				input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
-				isLoadFile = true;
-				filePath = selectedFile.getAbsolutePath();
-				albumInfo = input.getAlbumInfo();
-				trackInfo = input.getTrackInfo();
-				albumTitleField.setText(albumInfo[0]);
-				albumPerformerField.setText(albumInfo[1]);
-				albumFileField.setText(albumInfo[2]);
-				trackTable = new JTable(trackInfo,row);
-				trackArea.setViewportView(trackTable);
+				if(selectedFile != null){
+					input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
+					isLoadFile = true;
+					filePath = selectedFile.getAbsolutePath();
+					albumInfo = input.getAlbumInfo();
+					trackInfo = input.getTrackInfo();
+					albumTitleField.setText(albumInfo[0]);
+					albumPerformerField.setText(albumInfo[1]);
+					albumFileField.setText(albumInfo[2]);
+					trackTableModel = new MyTableModel(trackInfo);
+					trackTable = new JTable(trackTableModel);
+					trackTable.setPreferredScrollableViewportSize(new Dimension(600,400));
+					trackArea.setViewportView(trackTable);
+				}
 			}
 		});
 		albumArea.add(loadButton);
@@ -115,7 +119,9 @@ public class CueSheetGUI extends JFrame {
 					albumTitleField.setText(albumInfo[0]);
 					albumPerformerField.setText(albumInfo[1]);
 					albumFileField.setText(albumInfo[2]);
-					trackTable = new JTable(trackInfo,row);
+					trackTableModel = new MyTableModel(trackInfo);
+					trackTable = new JTable(trackTableModel);
+					trackTable.setPreferredScrollableViewportSize(new Dimension(600,400));
 					trackArea.setViewportView(trackTable);
 				}
 			}

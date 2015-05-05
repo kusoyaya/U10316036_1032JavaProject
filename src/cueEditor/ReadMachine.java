@@ -12,7 +12,7 @@ public class ReadMachine {
 	private Pattern pattern;
 	private Matcher matcher;
 	private String[] album ;
-	private String[][] track;
+	private Object[][] track;
 	private ArrayList<String> main = new ArrayList<String>();
 	private ArrayList<String> trackTitle = new ArrayList<String>();
 	private ArrayList<String> trackPerformer = new ArrayList<String>();
@@ -22,7 +22,7 @@ public class ReadMachine {
 	private boolean isBeforeTrackOne = true;
 	
 	public ReadMachine(String path ,String encode){
-		album = new String[5];
+		album = new String[6];
 		try{
 			file = new File(path);
 			input = new Scanner(file,encode);
@@ -38,6 +38,7 @@ public class ReadMachine {
 			}
 			if(s.matches("\\s*TRACK\\s*01\\s*AUDIO\\s*")){
 				isBeforeTrackOne = false;
+				System.out.println("hi");
 			}		
 		}
 		transToArray();
@@ -58,6 +59,16 @@ public class ReadMachine {
 		matcher = pattern.matcher(s);
 		while(matcher.find()){
 			album[2] = takeFromIt(matcher.group());
+		}
+		pattern = Pattern.compile("REM\\s*GENRE\\s*\".*\"");
+		matcher = pattern.matcher(s);
+		while(matcher.find()){
+			album[4] = takeFromIt(matcher.group());
+		}
+		pattern = Pattern.compile("REM\\s*DATE\\s*\".*\"");
+		matcher = pattern.matcher(s);
+		while(matcher.find()){
+			album[5] = takeFromIt(matcher.group());
 		}
 	}
 	
@@ -97,14 +108,15 @@ public class ReadMachine {
 	}
 	
 	private void transToArray(){
-		track = new String[trackTitle.size()][5];
+		track = new Object[trackTitle.size()][6];
 		
 		for(int i = 0; i < trackTitle.size() ; i++){
-			track[i][0] = trackTitle.get(i);
-			track[i][1] = trackPerformer.get(i);
-			track[i][2] = trackMinuteIndex.get(i);
-			track[i][3] = trackSecondIndex.get(i);
-			track[i][4] = trackFrameIndex.get(i);
+			track[i][0] = (i+1);
+			track[i][1] = trackTitle.get(i);
+			track[i][2] = trackPerformer.get(i);
+			track[i][3] = Integer.parseInt(trackMinuteIndex.get(i));
+			track[i][4] = Integer.parseInt(trackSecondIndex.get(i));
+			track[i][5] = Integer.parseInt(trackFrameIndex.get(i));
 		}
 	}
 	
@@ -112,7 +124,7 @@ public class ReadMachine {
 		return album;
 	}
 	
-	public String[][] getTrackInfo(){
+	public Object[][] getTrackInfo(){
 		return track;
 	}
 	
@@ -122,8 +134,8 @@ public class ReadMachine {
 			System.out.println(s);
 		}
 		
-		for(String[] ss : a.track){
-			for(String s : ss){
+		for(Object[] ss : a.track){
+			for(Object s : ss){
 				System.out.println(s);
 			}
 			System.out.println("======");
