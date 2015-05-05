@@ -31,15 +31,19 @@ public class CueSheetGUI extends JFrame {
 
 	private JPanel contentPane;
 	private JButton loadButton;
+	private JComboBox<String> encodeBox;
 	private ReadMachine input;
 	private JTextField albumTitleField;
 	private JTextField albumPerformerField;
 	private JTextField albumFileField;
 	private JScrollPane trackArea;
 	private JTable trackTable;
+	private String filePath = "";
 	private String[] albumInfo;
 	private String[][] trackInfo;
 	private String[] row = {"歌名","演出者","分鐘","秒數","幀數"};
+	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
+	private boolean isLoadFile = false;
 
 	/**
 	 * Launch the application.
@@ -87,7 +91,9 @@ public class CueSheetGUI extends JFrame {
 				if (result == JFileChooser.APPROVE_OPTION) {
 					selectedFile = fileChooser.getSelectedFile();
 				}
-				input = new ReadMachine(selectedFile.getAbsolutePath());
+				input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
+				isLoadFile = true;
+				filePath = selectedFile.getAbsolutePath();
 				albumInfo = input.getAlbumInfo();
 				trackInfo = input.getTrackInfo();
 				albumTitleField.setText(albumInfo[0]);
@@ -99,7 +105,23 @@ public class CueSheetGUI extends JFrame {
 		});
 		albumArea.add(loadButton);
 		
-		JComboBox encodeBox = new JComboBox();
+		encodeBox = new JComboBox<String>();
+		encodeBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isLoadFile){
+					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
+					albumInfo = input.getAlbumInfo();
+					trackInfo = input.getTrackInfo();
+					albumTitleField.setText(albumInfo[0]);
+					albumPerformerField.setText(albumInfo[1]);
+					albumFileField.setText(albumInfo[2]);
+					trackTable = new JTable(trackInfo,row);
+					trackArea.setViewportView(trackTable);
+				}
+			}
+		});
+		for(String s : encode)
+			encodeBox.addItem(s);
 		albumArea.add(encodeBox);
 		
 		JPanel albumTItilePad = new JPanel();

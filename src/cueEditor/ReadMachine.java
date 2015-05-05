@@ -21,11 +21,11 @@ public class ReadMachine {
 	private ArrayList<String> trackFrameIndex = new ArrayList<String>();
 	private boolean isBeforeTrackOne = true;
 	
-	public ReadMachine(String path){
+	public ReadMachine(String path ,String encode){
 		album = new String[5];
 		try{
 			file = new File(path);
-			input = new Scanner(file,"UTF-8");
+			input = new Scanner(file,encode);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
@@ -117,8 +117,10 @@ public class ReadMachine {
 	}
 	
 	public static void main(String[] args){
-		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/test.cue");
-		System.out.println(a.main);
+		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/testgbk.cue","Big5");
+		for(String s: a.album){
+			System.out.println(s);
+		}
 		
 		for(String[] ss : a.track){
 			for(String s : ss){
