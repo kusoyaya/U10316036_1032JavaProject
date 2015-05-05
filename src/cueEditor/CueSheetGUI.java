@@ -8,6 +8,8 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
@@ -97,13 +99,7 @@ public class CueSheetGUI extends JFrame {
 					filePath = selectedFile.getAbsolutePath();
 					albumInfo = input.getAlbumInfo();
 					trackInfo = input.getTrackInfo();
-					albumTitleField.setText(albumInfo[0]);
-					albumPerformerField.setText(albumInfo[1]);
-					albumFileField.setText(albumInfo[2]);
-					trackTableModel = new MyTableModel(trackInfo);
-					trackTable = new JTable(trackTableModel);
-					trackTable.setPreferredScrollableViewportSize(new Dimension(600,400));
-					trackArea.setViewportView(trackTable);
+					setTable();
 				}
 			}
 		});
@@ -116,13 +112,7 @@ public class CueSheetGUI extends JFrame {
 					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
 					albumInfo = input.getAlbumInfo();
 					trackInfo = input.getTrackInfo();
-					albumTitleField.setText(albumInfo[0]);
-					albumPerformerField.setText(albumInfo[1]);
-					albumFileField.setText(albumInfo[2]);
-					trackTableModel = new MyTableModel(trackInfo);
-					trackTable = new JTable(trackTableModel);
-					trackTable.setPreferredScrollableViewportSize(new Dimension(600,400));
-					trackArea.setViewportView(trackTable);
+					setTable();
 				}
 			}
 		});
@@ -163,8 +153,32 @@ public class CueSheetGUI extends JFrame {
 		trackArea = new JScrollPane();
 		contentPane.add(trackArea);
 		
-		
+		trackTable = new JTable();
 		trackArea.setViewportView(trackTable);
 	}
 
+	public void setTable(){
+		albumTitleField.setText(albumInfo[0]);
+		albumPerformerField.setText(albumInfo[1]);
+		albumFileField.setText(albumInfo[2]);
+		trackTableModel = new MyTableModel(trackInfo);
+		trackTable.setModel(trackTableModel);
+		trackTable.setPreferredScrollableViewportSize(new Dimension(600,400));
+		
+		trackTable.setAutoResizeMode(JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS);
+		trackTable.getColumnModel().getColumn(0).setMaxWidth(50);
+		trackTable.getColumnModel().getColumn(3).setMaxWidth(70);
+		trackTable.getColumnModel().getColumn(4).setMaxWidth(70);
+		trackTable.getColumnModel().getColumn(5).setMaxWidth(70);
+		
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		trackTable.getColumnModel().getColumn(1).setCellRenderer(centerRenderer);
+		trackTable.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
+		centerRenderer = (DefaultTableCellRenderer)trackTable.getTableHeader().getDefaultRenderer();
+		centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+		trackTable.getTableHeader().setDefaultRenderer(centerRenderer);
+	    
+		trackArea.setViewportView(trackTable);
+	}
 }
