@@ -47,6 +47,7 @@ public class CueSheetGUI extends JFrame {
 	private String[] row = {"曲序","歌名","演出者","分鐘","秒數","幀數"};
 	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
 	private boolean isLoadFile = false;
+	private JButton testButton;
 
 	/**
 	 * Launch the application.
@@ -149,6 +150,15 @@ public class CueSheetGUI extends JFrame {
 		albumFileField = new JTextField();
 		albumFilePad.add(albumFileField);
 		albumFileField.setColumns(20);
+		
+		testButton = new JButton("Just for Test");
+		testButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				WriteMachine testWrite = new WriteMachine("/Users/nasirho/Desktop/testWrite.cue",albumInfo,trackInfo);
+				
+			}
+		});
+		albumArea.add(testButton);
 		
 		trackArea = new JScrollPane();
 		contentPane.add(trackArea);

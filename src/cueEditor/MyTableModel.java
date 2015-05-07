@@ -12,19 +12,16 @@ public class MyTableModel extends AbstractTableModel{
 
 	@Override
 	public int getRowCount() {
-		// TODO Auto-generated method stub
 		return data.length;
 	}
 
 	@Override
 	public int getColumnCount() {
-		// TODO Auto-generated method stub
 		return column.length;
 	}
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
 		return data[rowIndex][columnIndex];
 	}
 	
@@ -41,5 +38,11 @@ public class MyTableModel extends AbstractTableModel{
 	@Override
 	public Class getColumnClass(int columnIndex){
 		return getValueAt(0,columnIndex).getClass();
+	}
+	
+	@Override
+	public void setValueAt(Object value, int rowIndex,int columnIndex){
+		data[rowIndex][columnIndex] = value;
+		
 	}
 }
