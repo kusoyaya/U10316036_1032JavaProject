@@ -61,7 +61,7 @@ public class TrackInfoDialog extends JDialog {
 			
 		trackTitleField = new JTextField();
 		trackTitlePad.add(trackTitleField);
-		trackTitleField.setColumns(10);
+		trackTitleField.setColumns(20);
 		trackTitleField.setText(""+showSomething(ReadMachine.TRACK_TITLE,false));
 		trackTitleField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
@@ -84,7 +84,7 @@ public class TrackInfoDialog extends JDialog {
 			
 			
 		trackPerformerField = new JTextField();
-		trackPerformerField.setColumns(10);
+		trackPerformerField.setColumns(20);
 		trackPerformerPad.add(trackPerformerField);
 		trackPerformerField.setText(""+showSomething(ReadMachine.TRACK_PERFORMER,false));
 		trackPerformerField.getDocument().addDocumentListener(new DocumentListener(){
@@ -108,7 +108,7 @@ public class TrackInfoDialog extends JDialog {
 			
 			
 		albumTitleField = new JTextField();
-		albumTitleField.setColumns(10);
+		albumTitleField.setColumns(20);
 		albumTitlePad.add(albumTitleField);
 		albumTitleField.setText(""+showSomething(ReadMachine.ALBUM_TITLE,true));
 		
@@ -121,7 +121,7 @@ public class TrackInfoDialog extends JDialog {
 			
 			
 		albumPerformerField = new JTextField();
-		albumPerformerField.setColumns(10);
+		albumPerformerField.setColumns(20);
 		albumPerformerPad.add(albumPerformerField);
 		albumPerformerField.setText(""+showSomething(ReadMachine.ALBUM_PERFORMER,true));
 		
@@ -133,7 +133,7 @@ public class TrackInfoDialog extends JDialog {
 		albumOtherPad.add(albumGenerateLabel);
 		
 		albumGenerateField = new JTextField();
-		albumGenerateField.setColumns(5);
+		albumGenerateField.setColumns(10);
 		albumOtherPad.add(albumGenerateField);
 		albumGenerateField.setText(""+showSomething(ReadMachine.ALBUM_GENRE,true));
 		
@@ -192,7 +192,8 @@ public class TrackInfoDialog extends JDialog {
 				result = albumInfo[thingsYouWant];
 			}else{
 				result = trackInfo[rowsNumber[0]][thingsYouWant];
-				for(int i = 0; i < rowsNumber.length-1;i++){
+				System.out.println("here"+result+"faj"+rowsNumber.length);
+				for(int i = 1; i <= rowsNumber.length-1;i++){
 					if(!trackInfo[rowsNumber[i]][thingsYouWant].equals(result)){
 						result = "[multi]";
 						break;
