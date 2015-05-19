@@ -1,22 +1,22 @@
 package cueEditor;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 
 public class WriteMachine {
-	File file;
-	PrintWriter pWriter;
-	String[] album;
-	Object[][] track;
+	private File file;
+	private PrintWriter pWriter;
+	private String[] album;
+	private Object[][] track;
+	private int formatNumber;
+	private String[] forMatArray = {"WAVE","WAVE","MP3","AIFF"};
 	
-	public WriteMachine(String outputPath ,String[] albumInfo,Object[][] trackInfo){
+	public WriteMachine(String outputPath ,String[] albumInfo,Object[][] trackInfo, int formatNumber){
 		album = albumInfo;
 		track = trackInfo;
 		file = new File(outputPath);
+		this.formatNumber = formatNumber;
 		try {
 			pWriter = new PrintWriter(file,"UTF-8");
 		} catch (IOException e) {
@@ -28,19 +28,19 @@ public class WriteMachine {
 	}
 	
 	private void writeAlbum(){
-		pWriter.println("REM GENRE \""+album[4]+"\"");
-		pWriter.println("REM DATE \""+album[5]+"\"");
-		pWriter.println("PERFORMER \""+album[1]+"\"");
-		pWriter.println("TITLE \""+album[0]+"\"");
-		pWriter.println("FILE \""+album[2]+"\" WAVE");//尚未確定是否要偵測副檔名來決定最後的字
+		pWriter.println("REM GENRE \""+album[ReadMachine.ALBUM_GENRE]+"\"");
+		pWriter.println("REM DATE \""+album[ReadMachine.ALBUM_DATE]+"\"");
+		pWriter.println("PERFORMER \""+album[ReadMachine.ALBUM_PERFORMER]+"\"");
+		pWriter.println("TITLE \""+album[ReadMachine.ALBUM_TITLE]+"\"");
+		pWriter.println("FILE \""+album[ReadMachine.ALBUM_FILE]+"\" "+forMatArray[formatNumber]);
 	}
 	
 	private void writeTrack(){
 		for(Object[] oneTrack:track){
-			pWriter.printf("\tTRACK %02d AUDIO\n",(int)oneTrack[0]);
-			pWriter.printf("\t\tTITLE \"%s\"\n",(String)oneTrack[1]);
-			pWriter.printf("\t\tPERFORMER \"%s\"\n",(String)oneTrack[2]);
-			pWriter.printf("\t\tINDEX 01 %02d:%02d:%02d\n",(int)oneTrack[3],(int)oneTrack[4],(int)oneTrack[5]);
+			pWriter.printf("\tTRACK %02d AUDIO\n",(int)oneTrack[ReadMachine.TRACK_ORDER]);
+			pWriter.printf("\t\tTITLE \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_TITLE]);
+			pWriter.printf("\t\tPERFORMER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_PERFORMER]);
+			pWriter.printf("\t\tINDEX 01 %02d:%02d:%02d\n",(int)oneTrack[ReadMachine.TRACK_MINUTEINDEX],(int)oneTrack[ReadMachine.TRACK_SECONDINDEX],(int)oneTrack[ReadMachine.TRACK_FRAMEINDEX]);
 		}
 	}
 	

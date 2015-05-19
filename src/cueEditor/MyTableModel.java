@@ -1,6 +1,5 @@
 package cueEditor;
 
-import javax.swing.JOptionPane;
 import javax.swing.table.AbstractTableModel;
 
 public class MyTableModel extends AbstractTableModel{
@@ -33,6 +32,8 @@ public class MyTableModel extends AbstractTableModel{
 	
 	@Override
 	public boolean isCellEditable(int row, int col){
+		if(col == 0)
+			return false;
 		return true;
 	}
 	

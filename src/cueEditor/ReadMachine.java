@@ -13,13 +13,27 @@ public class ReadMachine {
 	private Matcher matcher;
 	private String[] album ;
 	private Object[][] track;
-	private ArrayList<String> main = new ArrayList<String>();
+	private int audioFormat;
 	private ArrayList<String> trackTitle = new ArrayList<String>();
 	private ArrayList<String> trackPerformer = new ArrayList<String>();
 	private ArrayList<String> trackMinuteIndex = new ArrayList<String>();
 	private ArrayList<String> trackSecondIndex = new ArrayList<String>();
 	private ArrayList<String> trackFrameIndex = new ArrayList<String>();
 	private boolean isBeforeTrackOne = true;
+	public static final int ALBUM_TITLE = 0;
+	public static final int ALBUM_PERFORMER = 1;
+	public static final int ALBUM_FILE = 2;
+	public static final int ALBUM_GENRE = 4;
+	public static final int ALBUM_DATE = 5;
+	public static final int TRACK_ORDER = 0;
+	public static final int TRACK_TITLE = 1;
+	public static final int TRACK_PERFORMER = 2;
+	public static final int TRACK_MINUTEINDEX = 3;
+	public static final int TRACK_SECONDINDEX = 4;
+	public static final int TRACK_FRAMEINDEX = 5;
+	public static final int FORMAT_WAVE = 1;
+	public static final int FORMAT_MP3 = 2;
+	public static final int FORMAT_AIFF = 3;
 	
 	public ReadMachine(String path ,String encode){
 		album = new String[6];
@@ -42,6 +56,11 @@ public class ReadMachine {
 			}		
 		}
 		transToArray();
+		try{
+			audioFormat = getAudioFormat(album[ALBUM_FILE]);
+		}catch(Exception e){
+			audioFormat = 0;
+		}
 	}
 	
 	private void mainInfo(String s){
@@ -128,12 +147,41 @@ public class ReadMachine {
 		return track;
 	}
 	
+	public int getAudioFormat(){
+		return audioFormat;
+	}
+	
+	public static int getAudioFormat(String fileName){
+		int result = 0;
+		String[] temp = fileName.split("\\.");
+		switch(temp[temp.length-1]){
+		case"wav":
+		case"tak":
+		case"tta":
+		case"ape":
+		case"alac":
+		case"flac":
+		case"m4a":
+			result = 1;
+			break;
+		case"mp3":
+			result = 2;
+			break;
+		case"aiff":
+			result = 3;
+			break;
+		}
+		return result;
+	}
+	
 	public static void main(String[] args){
-		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/testgbk.cue","Big5");
+		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/testgbk.cue","GBK");
 		for(String s: a.album){
 			System.out.println(s);
 		}
-		
+		System.out.println("===");
+		System.out.println(a.audioFormat);
+		System.out.println("===");
 		for(Object[] ss : a.track){
 			for(Object s : ss){
 				System.out.println(s);
