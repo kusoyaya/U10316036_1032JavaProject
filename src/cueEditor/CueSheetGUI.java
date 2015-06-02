@@ -2,8 +2,11 @@ package cueEditor;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.Toolkit;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -19,6 +22,7 @@ import java.awt.Rectangle;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.BoxLayout;
@@ -27,12 +31,21 @@ import javax.swing.JComboBox;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
+import com.apple.eawt.AboutHandler;
+import com.apple.eawt.AppEvent.AboutEvent;
+import com.apple.eawt.AppEvent.PreferencesEvent;
+import com.apple.eawt.Application;
+import com.apple.eawt.PreferencesHandler;
+
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 
 public class CueSheetGUI extends JFrame {
 
@@ -82,7 +95,7 @@ public class CueSheetGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public CueSheetGUI() {
-		setTitle("SimpleCueEditor v0.1");
+		setTitle("SimpleCueEditor v0.7");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 800, 600);
@@ -106,7 +119,7 @@ public class CueSheetGUI extends JFrame {
 		panel.add(testButton);
 		testButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				WriteMachine testWrite = new WriteMachine("/Users/nasirho/Desktop/testWrite.cue",albumInfo,trackInfo,fileFormat);
+				new WriteMachine("/Users/nasirho/Desktop/testWrite.cue",albumInfo,trackInfo,fileFormat);
 				
 			}
 		});
@@ -136,6 +149,7 @@ public class CueSheetGUI extends JFrame {
 					input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
 					isLoadFile = true;
 					filePath = selectedFile.getAbsolutePath();
+					setTitle(getTitle()+selectedFile.getName());
 					albumInfo = input.getAlbumInfo();
 					trackInfo = input.getTrackInfo();
 					fileFormat = input.getAudioFormat();
@@ -261,12 +275,39 @@ public class CueSheetGUI extends JFrame {
 						showPopUp(e,rowNumber);
 					}
 					showPopUp(e,trackTable.getSelectedRows());
-					
-					
 				}
 			}
 		});
 		trackArea.setViewportView(trackTable);
+		
+		Application macApplication = Application.getApplication();
+				 
+				// About menu handler
+		macApplication.setAboutHandler(new AboutHandler() {
+			@Override
+			public void handleAbout(AboutEvent e) {
+				JOptionPane.showMessageDialog(null, "Simple Cue Sheet Editor by NasirHo", "About", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+		
+		macApplication.setPreferencesHandler(new PreferencesHandler(){
+
+			@Override
+			public void handlePreferences(PreferencesEvent arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+		});
+		
+		Image image = null;
+		try{
+			image = ImageIO.read(CueSheetGUI.class.getResourceAsStream("icon.png"));
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+		
+		macApplication.setDockIconImage(image);
 	}
 
 	private void setTable(){
@@ -307,6 +348,11 @@ public class CueSheetGUI extends JFrame {
 		});
 		JMenuItem menuPlay = new JMenuItem("播放");
 		JMenuItem menuReset = new JMenuItem("重新載入");
+		menuReset.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				
+			}
+		});
 		popupMenu.add(menuInfo);
 		if(rowNumbers.length == 1)
 			popupMenu.add(menuPlay);
