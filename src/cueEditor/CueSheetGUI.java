@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Toolkit;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -19,6 +18,7 @@ import javax.swing.JTable;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -28,7 +28,6 @@ import javax.swing.JTextField;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
 import com.apple.eawt.AboutHandler;
@@ -40,8 +39,6 @@ import com.apple.eawt.PreferencesHandler;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -74,6 +71,9 @@ public class CueSheetGUI extends JFrame {
 	private JLabel albumDateLabel;
 	private JTextField albumDateField;
 	private JButton albumFileButton;
+	private boolean hasSomethingChanged = false;
+	private JPanel albumInfoArea;
+	private JLabel albumCoverLabel;
 
 	/**
 	 * Launch the application.
@@ -99,6 +99,7 @@ public class CueSheetGUI extends JFrame {
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 800, 600);
+		setMacThing();
 		contentPane = new JPanel();
 		contentPane.setBounds(new Rectangle(0, 0, 600, 800));
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -161,27 +162,39 @@ public class CueSheetGUI extends JFrame {
 		JPanel albumArea = new JPanel();
 		albumArea.setPreferredSize(new Dimension(600, 300));
 		contentPane.add(albumArea);
-		albumArea.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
 		for(String s : encode)
 			encodeBox.addItem(s);
+		albumArea.setLayout(new BoxLayout(albumArea, BoxLayout.X_AXIS));
+		
+		
+		ImageIcon albumCoverIcon = new ImageIcon(CueSheetGUI.class.getResource("/loading.gif"));
+		albumCoverIcon.getImage().flush();
+		albumCoverLabel = new JLabel("");
+		albumCoverLabel.setIcon(albumCoverIcon);
+		albumCoverLabel.setPreferredSize(new Dimension(300, 300));
+		albumArea.add(albumCoverLabel);
+		
+		albumInfoArea = new JPanel();
+		albumArea.add(albumInfoArea);
+		albumInfoArea.setLayout(new BoxLayout(albumInfoArea, BoxLayout.Y_AXIS));
 		
 		JPanel albumTItilePad = new JPanel();
-		albumArea.add(albumTItilePad);
+		albumInfoArea.add(albumTItilePad);
 		
 		JLabel albumTitleLabel = new JLabel("專輯名稱:");
-		albumTItilePad.add(albumTitleLabel);
+		albumInfoArea.add(albumTitleLabel);
 		
 		albumTitleField = new JTextField();
+		albumInfoArea.add(albumTitleField);
 		albumTitleField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
 			}
 		});
-		albumTItilePad.add(albumTitleField);
 		albumTitleField.setColumns(20);
 		
 		JPanel albumPerformerPad = new JPanel();
-		albumArea.add(albumPerformerPad);
+		albumInfoArea.add(albumPerformerPad);
 		
 		JLabel albumPefromerLabel = new JLabel("專輯演出者:");
 		albumPerformerPad.add(albumPefromerLabel);
@@ -196,7 +209,7 @@ public class CueSheetGUI extends JFrame {
 		albumPerformerField.setColumns(20);
 		
 		JPanel albumFilePad = new JPanel();
-		albumArea.add(albumFilePad);
+		albumInfoArea.add(albumFilePad);
 		
 		JLabel albumFileLabel = new JLabel("源檔案:");
 		albumFilePad.add(albumFileLabel);
@@ -228,7 +241,7 @@ public class CueSheetGUI extends JFrame {
 		
 		
 		albumGeneratePad = new JPanel();
-		albumArea.add(albumGeneratePad);
+		albumInfoArea.add(albumGeneratePad);
 		
 		albumGenerateLabel = new JLabel("專輯類型:");
 		albumGeneratePad.add(albumGenerateLabel);
@@ -243,7 +256,7 @@ public class CueSheetGUI extends JFrame {
 		albumGeneratePad.add(albumGenerateField);
 		
 		albumDatePad = new JPanel();
-		albumArea.add(albumDatePad);
+		albumInfoArea.add(albumDatePad);
 		
 		albumDateLabel = new JLabel("專輯年份:");
 		albumDatePad.add(albumDateLabel);
@@ -280,34 +293,7 @@ public class CueSheetGUI extends JFrame {
 		});
 		trackArea.setViewportView(trackTable);
 		
-		Application macApplication = Application.getApplication();
-				 
-				// About menu handler
-		macApplication.setAboutHandler(new AboutHandler() {
-			@Override
-			public void handleAbout(AboutEvent e) {
-				JOptionPane.showMessageDialog(null, "Simple Cue Sheet Editor by NasirHo", "About", JOptionPane.INFORMATION_MESSAGE);
-			}
-		});
 		
-		macApplication.setPreferencesHandler(new PreferencesHandler(){
-
-			@Override
-			public void handlePreferences(PreferencesEvent arg0) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
-		
-		Image image = null;
-		try{
-			image = ImageIO.read(CueSheetGUI.class.getResourceAsStream("icon.png"));
-		}catch(Exception ex){
-			ex.printStackTrace();
-		}
-		
-		macApplication.setDockIconImage(image);
 	}
 
 	private void setTable(){
@@ -336,6 +322,7 @@ public class CueSheetGUI extends JFrame {
 		trackTable.getTableHeader().setDefaultRenderer(centerRenderer); //設定column文字顯示置中
 	    
 		trackArea.setViewportView(trackTable);
+		setAlbumCover();
 	}
 	
 	private void showPopUp(MouseEvent e , int[] rowNumbers){
@@ -359,6 +346,48 @@ public class CueSheetGUI extends JFrame {
 		popupMenu.add(menuReset);
 		if(e.isPopupTrigger()){
 			popupMenu.show(e.getComponent(), e.getX(), e.getY());
+		}
+	}
+	
+	private void setMacThing(){
+		Application macApplication = Application.getApplication();
+		 
+		// About menu handler
+		macApplication.setAboutHandler(new AboutHandler() {
+			@Override
+			public void handleAbout(AboutEvent e) {
+				JOptionPane.showMessageDialog(null, "Simple Cue Sheet Editor \nby NasirHo", "About", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
+
+		macApplication.setPreferencesHandler(new PreferencesHandler(){
+			@Override
+			public void handlePreferences(PreferencesEvent arg0) {
+				// TODO Auto-generated method stub
+		
+			}
+	
+		});
+
+		Image icon = null;
+		try{
+			icon = ImageIO.read(CueSheetGUI.class.getResourceAsStream("/icon.png"));
+		}catch(Exception ex){
+			ex.printStackTrace();
+		}
+
+		macApplication.setDockIconImage(icon);
+	}
+	
+	public void someThingChanged(){
+		this.hasSomethingChanged = true;
+	}
+	
+	public void setAlbumCover(){
+		try{
+			albumCoverLabel.setIcon(new ImageIcon(ServiceMachine.getAlbumCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+albumInfo[ReadMachine.ALBUM_TITLE])));
+		}catch(Exception ex){
+			
 		}
 	}
 }

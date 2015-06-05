@@ -1,5 +1,7 @@
 package cueEditor;
 
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 
 public class MyTableModel extends AbstractTableModel{
