@@ -50,6 +50,7 @@ public class CueSheetGUI extends JFrame {
 	private JButton loadButton;
 	private JComboBox<String> encodeBox;
 	private ReadMachine input;
+	private ServiceMachine service = new ServiceMachine();
 	private JTextField albumTitleField;
 	private JTextField albumPerformerField;
 	private JTextField albumFileField;
@@ -66,14 +67,19 @@ public class CueSheetGUI extends JFrame {
 	private JPanel albumGeneratePad;
 	private JLabel albumGenerateLabel;
 	private JTextField albumGenerateField;
-	private JPanel panel;
+	private JPanel controlPad;
 	private JPanel albumDatePad;
 	private JLabel albumDateLabel;
 	private JTextField albumDateField;
 	private JButton albumFileButton;
 	private boolean hasSomethingChanged = false;
+	private boolean hasCover = false;
 	private JPanel albumInfoArea;
 	private JLabel albumCoverLabel;
+	private JPanel albumCoverArea;
+	private JButton coverLastButton;
+	private JButton coverNextButton;
+	private JButton coverSaveButton;
 
 	/**
 	 * Launch the application.
@@ -106,86 +112,82 @@ public class CueSheetGUI extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
-		panel = new JPanel();
-		contentPane.add(panel);
-		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-		
-		loadButton = new JButton("讀取檔案");
-		panel.add(loadButton);
-		
-		encodeBox = new JComboBox<String>();
-		panel.add(encodeBox);
-		
-		testButton = new JButton("Just for Test");
-		panel.add(testButton);
-		testButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new WriteMachine("/Users/nasirho/Desktop/testWrite.cue",albumInfo,trackInfo,fileFormat);
-				
-			}
-		});
-		encodeBox.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if(isLoadFile){
-					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
-					albumInfo = input.getAlbumInfo();
-					trackInfo = input.getTrackInfo();
-					fileFormat = input.getAudioFormat();
-					setTable();
-				}
-			}
-		});
-		loadButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				File selectedFile = null;
-				
-				JFileChooser fileChooser = new JFileChooser();
-				FileFilter filter = new FileNameExtensionFilter("Cue Sheet","cue");
-				fileChooser.setFileFilter(filter);
-				int result = fileChooser.showOpenDialog(loadButton);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					selectedFile = fileChooser.getSelectedFile();
-				}
-				if(selectedFile != null){
-					input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
-					isLoadFile = true;
-					filePath = selectedFile.getAbsolutePath();
-					setTitle(getTitle()+selectedFile.getName());
-					albumInfo = input.getAlbumInfo();
-					trackInfo = input.getTrackInfo();
-					fileFormat = input.getAudioFormat();
-					setTable();
-				}
-			}
-		});
-		
 		JPanel albumArea = new JPanel();
-		albumArea.setPreferredSize(new Dimension(600, 300));
+		albumArea.setPreferredSize(new Dimension(600, 360));
 		contentPane.add(albumArea);
-		for(String s : encode)
-			encodeBox.addItem(s);
+		
+		
 		albumArea.setLayout(new BoxLayout(albumArea, BoxLayout.X_AXIS));
-		
-		
 		ImageIcon albumCoverIcon = new ImageIcon(CueSheetGUI.class.getResource("/loading.gif"));
 		albumCoverIcon.getImage().flush();
+		
+		albumCoverArea = new JPanel();
+		albumCoverArea.setMaximumSize(new Dimension(300, 360));
+		albumCoverArea.setPreferredSize(new Dimension(300, 360));
+		albumArea.add(albumCoverArea);
+		
+		
 		albumCoverLabel = new JLabel("");
-		albumCoverLabel.setIcon(albumCoverIcon);
+		albumCoverLabel.setMaximumSize(new Dimension(300, 300));
+		albumCoverArea.add(albumCoverLabel);
 		albumCoverLabel.setPreferredSize(new Dimension(300, 300));
-		albumArea.add(albumCoverLabel);
+		albumCoverLabel.setIcon(albumCoverIcon);
+		albumCoverIcon.setImageObserver(albumCoverLabel);
+		
+		coverLastButton = new JButton("last");
+		coverLastButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Thread coverChangeProcess = new Thread(new Runnable(){
+					public void run() {
+						if(hasCover)
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover()));
+							}catch(Exception e){
+								
+							}
+					}
+				});
+				coverChangeProcess.start();
+			}
+		});
+		coverLastButton.setPreferredSize(new Dimension(75, 20));
+		albumCoverArea.add(coverLastButton);
+		
+		coverNextButton = new JButton("next");
+		coverNextButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				Thread coverChangeProcess = new Thread(new Runnable(){
+					public void run(){
+						if(hasCover)
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover()));
+							}catch(Exception e){
+								
+							}
+					}
+				});
+				coverChangeProcess.start();
+			}
+		});
+		coverNextButton.setPreferredSize(new Dimension(75, 20));
+		albumCoverArea.add(coverNextButton);
+		
+		coverSaveButton = new JButton("save");
+		coverSaveButton.setPreferredSize(new Dimension(117, 20));
+		albumCoverArea.add(coverSaveButton);
 		
 		albumInfoArea = new JPanel();
 		albumArea.add(albumInfoArea);
 		albumInfoArea.setLayout(new BoxLayout(albumInfoArea, BoxLayout.Y_AXIS));
 		
+		
 		JPanel albumTItilePad = new JPanel();
-		albumInfoArea.add(albumTItilePad);
 		
 		JLabel albumTitleLabel = new JLabel("專輯名稱:");
-		albumInfoArea.add(albumTitleLabel);
+		albumTItilePad.add(albumTitleLabel);
 		
 		albumTitleField = new JTextField();
-		albumInfoArea.add(albumTitleField);
+		albumTItilePad.add(albumTitleField);
 		albumTitleField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
@@ -194,7 +196,6 @@ public class CueSheetGUI extends JFrame {
 		albumTitleField.setColumns(20);
 		
 		JPanel albumPerformerPad = new JPanel();
-		albumInfoArea.add(albumPerformerPad);
 		
 		JLabel albumPefromerLabel = new JLabel("專輯演出者:");
 		albumPerformerPad.add(albumPefromerLabel);
@@ -209,7 +210,6 @@ public class CueSheetGUI extends JFrame {
 		albumPerformerField.setColumns(20);
 		
 		JPanel albumFilePad = new JPanel();
-		albumInfoArea.add(albumFilePad);
 		
 		JLabel albumFileLabel = new JLabel("源檔案:");
 		albumFilePad.add(albumFileLabel);
@@ -241,7 +241,6 @@ public class CueSheetGUI extends JFrame {
 		
 		
 		albumGeneratePad = new JPanel();
-		albumInfoArea.add(albumGeneratePad);
 		
 		albumGenerateLabel = new JLabel("專輯類型:");
 		albumGeneratePad.add(albumGenerateLabel);
@@ -256,7 +255,6 @@ public class CueSheetGUI extends JFrame {
 		albumGeneratePad.add(albumGenerateField);
 		
 		albumDatePad = new JPanel();
-		albumInfoArea.add(albumDatePad);
 		
 		albumDateLabel = new JLabel("專輯年份:");
 		albumDatePad.add(albumDateLabel);
@@ -269,6 +267,72 @@ public class CueSheetGUI extends JFrame {
 		});
 		albumDateField.setColumns(5);
 		albumDatePad.add(albumDateField);
+		
+		controlPad = new JPanel();
+		controlPad.setPreferredSize(new Dimension(300, 200));
+		controlPad.setLayout(new BoxLayout(controlPad, BoxLayout.X_AXIS));
+		
+		loadButton = new JButton("讀取檔案");
+		controlPad.add(loadButton);
+		
+		
+		
+		testButton = new JButton("Just for Test");
+		controlPad.add(testButton);
+		testButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				new WriteMachine("/Users/nasirho/Desktop/testWrite.cue",albumInfo,trackInfo,fileFormat);
+				
+			}
+		});
+		
+		loadButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File selectedFile = null;
+				
+				JFileChooser fileChooser = new JFileChooser();
+				FileFilter filter = new FileNameExtensionFilter("Cue Sheet","cue");
+				fileChooser.setFileFilter(filter);
+				int result = fileChooser.showOpenDialog(loadButton);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					selectedFile = fileChooser.getSelectedFile();
+				}
+				if(selectedFile != null){
+					input = new ReadMachine(selectedFile.getAbsolutePath(),(String)encodeBox.getSelectedItem());
+					isLoadFile = true;
+					filePath = selectedFile.getAbsolutePath();
+					setTitle(getTitle()+selectedFile.getName());
+					albumInfo = input.getAlbumInfo();
+					trackInfo = input.getTrackInfo();
+					fileFormat = input.getAudioFormat();
+					setTable();
+				}
+			}
+		});
+		
+		encodeBox = new JComboBox<String>();
+		
+		for(String s : encode)
+			encodeBox.addItem(s);
+		encodeBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isLoadFile){
+					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
+					albumInfo = input.getAlbumInfo();
+					trackInfo = input.getTrackInfo();
+					fileFormat = input.getAudioFormat();
+					setTable();
+				}
+			}
+		});
+		controlPad.add(encodeBox);
+		
+		albumInfoArea.add(controlPad);
+		albumInfoArea.add(albumTItilePad);
+		albumInfoArea.add(albumPerformerPad);
+		albumInfoArea.add(albumFilePad);
+		albumInfoArea.add(albumGeneratePad);
+		albumInfoArea.add(albumDatePad);
 		
 		trackArea = new JScrollPane();
 		contentPane.add(trackArea);
@@ -322,7 +386,21 @@ public class CueSheetGUI extends JFrame {
 		trackTable.getTableHeader().setDefaultRenderer(centerRenderer); //設定column文字顯示置中
 	    
 		trackArea.setViewportView(trackTable);
-		setAlbumCover();
+		
+		Thread getCoverProcess = new Thread(new Runnable(){
+			public void run() {
+				hasCover= service.hasCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+albumInfo[ReadMachine.ALBUM_TITLE]);
+				if(hasCover)
+					try{
+						albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover()));
+					}catch(Exception e){
+						
+					}
+			}
+		});
+		
+		getCoverProcess.start();
+		
 	}
 	
 	private void showPopUp(MouseEvent e , int[] rowNumbers){
@@ -383,11 +461,5 @@ public class CueSheetGUI extends JFrame {
 		this.hasSomethingChanged = true;
 	}
 	
-	public void setAlbumCover(){
-		try{
-			albumCoverLabel.setIcon(new ImageIcon(ServiceMachine.getAlbumCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+albumInfo[ReadMachine.ALBUM_TITLE])));
-		}catch(Exception ex){
-			
-		}
-	}
+	
 }
