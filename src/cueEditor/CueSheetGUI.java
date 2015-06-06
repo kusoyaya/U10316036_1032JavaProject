@@ -18,6 +18,7 @@ import javax.swing.JTable;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 
+import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -75,6 +76,7 @@ public class CueSheetGUI extends JFrame {
 	private boolean hasSomethingChanged = false;
 	private boolean hasCover = false;
 	private JPanel albumInfoArea;
+	private ImageIcon albumCoverIcon;
 	private JLabel albumCoverLabel;
 	private JPanel albumCoverArea;
 	private JButton coverLastButton;
@@ -112,170 +114,30 @@ public class CueSheetGUI extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
-		JPanel albumArea = new JPanel();
-		albumArea.setPreferredSize(new Dimension(600, 360));
-		contentPane.add(albumArea);
-		
-		
-		albumArea.setLayout(new BoxLayout(albumArea, BoxLayout.X_AXIS));
-		ImageIcon albumCoverIcon = new ImageIcon(CueSheetGUI.class.getResource("/loading.gif"));
-		albumCoverIcon.getImage().flush();
-		
-		albumCoverArea = new JPanel();
-		albumCoverArea.setMaximumSize(new Dimension(300, 360));
-		albumCoverArea.setPreferredSize(new Dimension(300, 360));
-		albumArea.add(albumCoverArea);
-		
-		
-		albumCoverLabel = new JLabel("");
-		albumCoverLabel.setMaximumSize(new Dimension(300, 300));
-		albumCoverArea.add(albumCoverLabel);
-		albumCoverLabel.setPreferredSize(new Dimension(300, 300));
-		albumCoverLabel.setIcon(albumCoverIcon);
-		albumCoverIcon.setImageObserver(albumCoverLabel);
-		
-		coverLastButton = new JButton("last");
-		coverLastButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				Thread coverChangeProcess = new Thread(new Runnable(){
-					public void run() {
-						if(hasCover)
-							try{
-								albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover()));
-							}catch(Exception e){
-								
-							}
-					}
-				});
-				coverChangeProcess.start();
-			}
-		});
-		coverLastButton.setPreferredSize(new Dimension(75, 20));
-		albumCoverArea.add(coverLastButton);
-		
-		coverNextButton = new JButton("next");
-		coverNextButton.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e){
-				Thread coverChangeProcess = new Thread(new Runnable(){
-					public void run(){
-						if(hasCover)
-							try{
-								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover()));
-							}catch(Exception e){
-								
-							}
-					}
-				});
-				coverChangeProcess.start();
-			}
-		});
-		coverNextButton.setPreferredSize(new Dimension(75, 20));
-		albumCoverArea.add(coverNextButton);
-		
-		coverSaveButton = new JButton("save");
-		coverSaveButton.setPreferredSize(new Dimension(117, 20));
-		albumCoverArea.add(coverSaveButton);
-		
-		albumInfoArea = new JPanel();
-		albumArea.add(albumInfoArea);
-		albumInfoArea.setLayout(new BoxLayout(albumInfoArea, BoxLayout.Y_AXIS));
-		
-		
-		JPanel albumTItilePad = new JPanel();
-		
-		JLabel albumTitleLabel = new JLabel("專輯名稱:");
-		albumTItilePad.add(albumTitleLabel);
-		
-		albumTitleField = new JTextField();
-		albumTItilePad.add(albumTitleField);
-		albumTitleField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
-			}
-		});
-		albumTitleField.setColumns(20);
-		
-		JPanel albumPerformerPad = new JPanel();
-		
-		JLabel albumPefromerLabel = new JLabel("專輯演出者:");
-		albumPerformerPad.add(albumPefromerLabel);
-		
-		albumPerformerField = new JTextField();
-		albumPerformerField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
-			}
-		});
-		albumPerformerPad.add(albumPerformerField);
-		albumPerformerField.setColumns(20);
-		
-		JPanel albumFilePad = new JPanel();
-		
-		JLabel albumFileLabel = new JLabel("源檔案:");
-		albumFilePad.add(albumFileLabel);
-		
-		albumFileField = new JTextField();
-		albumFileField.setEditable(false);
-		albumFilePad.add(albumFileField);
-		albumFileField.setColumns(15);
-		
-		albumFileButton = new JButton("關聯檔案");
-		albumFileButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				File selectedFile = null;
-				
-				JFileChooser fileChooser = new JFileChooser();
-				FileFilter filter = new FileNameExtensionFilter("Cue Sheet","cue");
-				fileChooser.setFileFilter(filter);
-				int result = fileChooser.showOpenDialog(loadButton);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					selectedFile = fileChooser.getSelectedFile();
-				}
-				if(selectedFile != null){
-					fileFormat = ReadMachine.getAudioFormat(selectedFile.getName());
-					albumFileField.setText(selectedFile.getName());
-				}
-			}
-		});
-		albumFilePad.add(albumFileButton);
-		
-		
-		albumGeneratePad = new JPanel();
-		
-		albumGenerateLabel = new JLabel("專輯類型:");
-		albumGeneratePad.add(albumGenerateLabel);
-		
-		albumGenerateField = new JTextField();
-		albumGenerateField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
-			}
-		});
-		albumGenerateField.setColumns(10);
-		albumGeneratePad.add(albumGenerateField);
-		
-		albumDatePad = new JPanel();
-		
-		albumDateLabel = new JLabel("專輯年份:");
-		albumDatePad.add(albumDateLabel);
-		
-		albumDateField = new JTextField();
-		albumDateField.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
-			}
-		});
-		albumDateField.setColumns(5);
-		albumDatePad.add(albumDateField);
-		
 		controlPad = new JPanel();
-		controlPad.setPreferredSize(new Dimension(300, 200));
+		contentPane.add(controlPad);
 		controlPad.setLayout(new BoxLayout(controlPad, BoxLayout.X_AXIS));
+		
+		controlPad.add(Box.createHorizontalStrut(10));
 		
 		loadButton = new JButton("讀取檔案");
 		controlPad.add(loadButton);
 		
+		encodeBox = new JComboBox<String>();
+		encodeBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(isLoadFile){
+					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
+					albumInfo = input.getAlbumInfo();
+					trackInfo = input.getTrackInfo();
+					fileFormat = input.getAudioFormat();
+					setTable();
+				}
+			}
+		});
+		controlPad.add(encodeBox);
 		
+		controlPad.add(Box.createGlue());
 		
 		testButton = new JButton("Just for Test");
 		controlPad.add(testButton);
@@ -310,29 +172,186 @@ public class CueSheetGUI extends JFrame {
 			}
 		});
 		
-		encodeBox = new JComboBox<String>();
+		JPanel albumArea = new JPanel();
+		albumArea.setPreferredSize(new Dimension(600, 360));
+		contentPane.add(albumArea);
 		
-		for(String s : encode)
-			encodeBox.addItem(s);
-		encodeBox.addActionListener(new ActionListener() {
+		albumArea.add(Box.createGlue());
+		
+		albumArea.setLayout(new BoxLayout(albumArea, BoxLayout.X_AXIS));
+		albumCoverIcon = new ImageIcon(CueSheetGUI.class.getResource("/loading.gif"));
+		albumCoverIcon.getImage().flush();
+		
+		albumCoverArea = new JPanel();
+		albumCoverArea.setMaximumSize(new Dimension(300, 360));
+		albumCoverArea.setPreferredSize(new Dimension(300, 360));
+		albumArea.add(albumCoverArea);
+		
+		albumArea.add(Box.createGlue());
+		
+		albumCoverLabel = new JLabel("");
+		albumCoverLabel.setMaximumSize(new Dimension(300, 300));
+		albumCoverArea.add(albumCoverLabel);
+		albumCoverLabel.setPreferredSize(new Dimension(300, 300));
+		albumCoverLabel.setIcon(albumCoverIcon);
+		albumCoverIcon.setImageObserver(albumCoverLabel);
+		
+		coverLastButton = new JButton("last");
+		coverLastButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isLoadFile){
-					input = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
-					albumInfo = input.getAlbumInfo();
-					trackInfo = input.getTrackInfo();
-					fileFormat = input.getAudioFormat();
-					setTable();
+				setLoadingGif();
+				Thread coverChangeProcess = new Thread(new Runnable(){
+					public void run() {
+						if(hasCover)
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover(true)));
+							}catch(Exception e){
+								
+							}
+					}
+				});
+				coverChangeProcess.start();
+			}
+		});
+		coverLastButton.setPreferredSize(new Dimension(75, 20));
+		albumCoverArea.add(coverLastButton);
+		
+		coverNextButton = new JButton("next");
+		coverNextButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				setLoadingGif();
+				Thread coverChangeProcess = new Thread(new Runnable(){
+					public void run(){
+						if(hasCover)
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
+							}catch(Exception e){
+								
+							}
+					}
+				});
+				coverChangeProcess.start();
+			}
+		});
+		coverNextButton.setPreferredSize(new Dimension(75, 20));
+		albumCoverArea.add(coverNextButton);
+		
+		coverSaveButton = new JButton("save");
+		coverSaveButton.setPreferredSize(new Dimension(117, 20));
+		albumCoverArea.add(coverSaveButton);
+		
+		albumInfoArea = new JPanel();
+		albumArea.add(albumInfoArea);
+		albumInfoArea.setLayout(new BoxLayout(albumInfoArea, BoxLayout.Y_AXIS));
+		
+		
+		JPanel albumTItilePad = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) albumTItilePad.getLayout();
+		flowLayout.setAlignment(FlowLayout.LEFT);
+		
+		JLabel albumTitleLabel = new JLabel("專輯名稱:");
+		albumTItilePad.add(albumTitleLabel);
+		
+		albumTitleField = new JTextField();
+		albumTItilePad.add(albumTitleField);
+		albumTitleField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
+			}
+		});
+		albumTitleField.setColumns(20);
+		
+		JPanel albumPerformerPad = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) albumPerformerPad.getLayout();
+		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		
+		JLabel albumPefromerLabel = new JLabel("專輯演出者:");
+		albumPerformerPad.add(albumPefromerLabel);
+		
+		albumPerformerField = new JTextField();
+		albumPerformerField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
+			}
+		});
+		albumPerformerPad.add(albumPerformerField);
+		albumPerformerField.setColumns(20);
+		
+		JPanel albumFilePad = new JPanel();
+		FlowLayout flowLayout_2 = (FlowLayout) albumFilePad.getLayout();
+		flowLayout_2.setAlignment(FlowLayout.LEFT);
+		
+		JLabel albumFileLabel = new JLabel("來源檔案:");
+		albumFilePad.add(albumFileLabel);
+		
+		albumFileField = new JTextField();
+		albumFileField.setEditable(false);
+		albumFilePad.add(albumFileField);
+		albumFileField.setColumns(20);
+		
+		albumFileButton = new JButton("關聯檔案");
+		albumFileButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				File selectedFile = null;
+				
+				JFileChooser fileChooser = new JFileChooser();
+				FileFilter filter = new FileNameExtensionFilter("Cue Sheet","cue");
+				fileChooser.setFileFilter(filter);
+				int result = fileChooser.showOpenDialog(loadButton);
+				if (result == JFileChooser.APPROVE_OPTION) {
+					selectedFile = fileChooser.getSelectedFile();
+				}
+				if(selectedFile != null){
+					fileFormat = ReadMachine.getAudioFormat(selectedFile.getName());
+					albumFileField.setText(selectedFile.getName());
 				}
 			}
 		});
-		controlPad.add(encodeBox);
+		albumFilePad.add(albumFileButton);
 		
-		albumInfoArea.add(controlPad);
+		
+		albumGeneratePad = new JPanel();
+		FlowLayout flowLayout_3 = (FlowLayout) albumGeneratePad.getLayout();
+		flowLayout_3.setAlignment(FlowLayout.LEFT);
+		
+		albumGenerateLabel = new JLabel("專輯類型:");
+		albumGeneratePad.add(albumGenerateLabel);
+		
+		albumGenerateField = new JTextField();
+		albumGenerateField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
+			}
+		});
+		albumGenerateField.setColumns(10);
+		albumGeneratePad.add(albumGenerateField);
+		
+		albumDatePad = new JPanel();
+		FlowLayout flowLayout_4 = (FlowLayout) albumDatePad.getLayout();
+		flowLayout_4.setAlignment(FlowLayout.LEFT);
+		
+		albumDateLabel = new JLabel("專輯年份:");
+		albumDatePad.add(albumDateLabel);
+		
+		albumDateField = new JTextField();
+		albumDateField.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
+			}
+		});
+		albumDateField.setColumns(5);
+		albumDatePad.add(albumDateField);
+		
+		for(String s : encode)
+			encodeBox.addItem(s);
+		
+		albumInfoArea.add(Box.createGlue());
 		albumInfoArea.add(albumTItilePad);
 		albumInfoArea.add(albumPerformerPad);
 		albumInfoArea.add(albumFilePad);
 		albumInfoArea.add(albumGeneratePad);
 		albumInfoArea.add(albumDatePad);
+		albumInfoArea.add(Box.createGlue());
 		
 		trackArea = new JScrollPane();
 		contentPane.add(trackArea);
@@ -387,12 +406,14 @@ public class CueSheetGUI extends JFrame {
 	    
 		trackArea.setViewportView(trackTable);
 		
+		setLoadingGif();
+		
 		Thread getCoverProcess = new Thread(new Runnable(){
 			public void run() {
 				hasCover= service.hasCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+albumInfo[ReadMachine.ALBUM_TITLE]);
 				if(hasCover)
 					try{
-						albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover()));
+						albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
 					}catch(Exception e){
 						
 					}
@@ -455,6 +476,11 @@ public class CueSheetGUI extends JFrame {
 		}
 
 		macApplication.setDockIconImage(icon);
+	}
+	
+	private void setLoadingGif(){
+		albumCoverLabel.setIcon(albumCoverIcon);
+		albumCoverIcon.getImage().flush();
 	}
 	
 	public void someThingChanged(){

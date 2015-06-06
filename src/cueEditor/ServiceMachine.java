@@ -1,10 +1,13 @@
 package cueEditor;
 
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+
 import javax.imageio.ImageIO;
 
 import org.json.*;
@@ -55,7 +58,7 @@ public class ServiceMachine {
 		return hasCover;
 	}
 	
-	public BufferedImage getNextAlbumCover() throws Exception{
+	public BufferedImage getNextAlbumCover(boolean resizeOrNot) throws Exception{
 		i++;
 		if(i<0)
 			i = 0;
@@ -64,10 +67,13 @@ public class ServiceMachine {
 
         BufferedImage image = ImageIO.read(new URL(imageUrl));
         
+        if(resizeOrNot)
+        	image = resizeTo300(image);
+        	
         return image;
 	}
 	
-	public BufferedImage getLastAlbumCover() throws Exception{
+	public BufferedImage getLastAlbumCover(boolean resizeOrNot) throws Exception{
 		i--;
 		if(i<0)
 			i = 0;
@@ -76,6 +82,19 @@ public class ServiceMachine {
 
         BufferedImage image = ImageIO.read(new URL(imageUrl));
         
+        if(resizeOrNot)
+        	image = resizeTo300(image);
+        
         return image;
+	}
+	
+	private BufferedImage resizeTo300(BufferedImage oImage){
+		BufferedImage rImage = new BufferedImage(300,300,BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2 = rImage.createGraphics();
+		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g2.drawImage(oImage,0,0,300,300,null);
+		g2.dispose();
+		
+		return rImage;
 	}
 }
