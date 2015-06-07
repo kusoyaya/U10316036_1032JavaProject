@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="src/cueEditor/json.jar"/>
 	<classpathentry kind="lib" path="src/cueEditor/jaudiotagger-2.2.3.jar"/>
+	<classpathentry kind="lib" path="src/AppleScriptEngine.jar"/>
 	<classpathentry kind="lib" path="src/cueEditor/pic.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -159,7 +159,7 @@ public class CueSheetGUI extends JFrame {
 						if(isCue){
 							new WriteMachine(fileDirectory+"/"+fileName,albumInfo,trackInfo,fileFormat);
 						}else{
-							tagInput.writeTag(trackInfo);
+							TagReadMachine.writeTag(trackInfo);
 						}
 					}
 				}
@@ -249,10 +249,16 @@ public class CueSheetGUI extends JFrame {
 							try{
 								albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover(true)));
 							}catch(Exception e){
-								
+								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
 							}
-						}else if(!isCue){
+						}else if(!isCue && !hasCover){
 							albumCoverLabel.setIcon(new ImageIcon(tagInput.getLastCover(true)));
+						}else if(!isCue && hasCover){
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
+							}catch(Exception e){
+								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+							}
 						}
 					}
 				});
@@ -273,10 +279,16 @@ public class CueSheetGUI extends JFrame {
 							try{
 								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
 							}catch(Exception e){
-								
+								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
 							}
-						}else if(!isCue){
+						}else if(!isCue && !hasCover){
 							albumCoverLabel.setIcon(new ImageIcon(tagInput.getNextCover(true)));
+						}else if(!isCue && hasCover){
+							try{
+								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
+							}catch(Exception e){
+								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+							}
 						}
 					}
 				});
@@ -288,6 +300,40 @@ public class CueSheetGUI extends JFrame {
 		
 		coverSaveButton = new JButton("save");
 		coverSaveButton.setPreferredSize(new Dimension(117, 20));
+		coverSaveButton.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				Thread coverProcess = new Thread(new Runnable(){
+					public void run(){
+						if(isCue && hasCover){
+							try{
+								File output = new File(fileDirectory+"/cover.png");
+								ImageIO.write(service.getNowAlbumCover(false), "png", output);
+								JOptionPane.showMessageDialog(contentPane, "儲存完成");
+							}catch(Exception e){
+								JOptionPane.showMessageDialog(contentPane, "寫入錯誤", "發生錯誤", JOptionPane.ERROR_MESSAGE);
+							}
+						}else if(!isCue && !hasCover){
+							try{
+								hasCover = service.hasCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+" "+albumInfo[ReadMachine.ALBUM_TITLE]);
+								if(hasCover){
+									setLoadingGif();
+									albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
+									coverSaveButton.setText("還原");
+								}
+								
+							}catch(Exception e){
+								
+							}
+						}else if(!isCue && hasCover){
+							hasCover = false;
+							coverSaveButton.setText("Google Search");
+							albumCoverLabel.setIcon(new ImageIcon(tagInput.getNextCover(true)));
+						}
+					}
+				});
+				coverProcess.start();
+			}
+		});
 		albumCoverArea.add(coverSaveButton);
 		
 		albumInfoArea = new JPanel();
@@ -491,7 +537,7 @@ public class CueSheetGUI extends JFrame {
 					try{
 						albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
 					}catch(Exception e){
-						
+						albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
 					}
 			}
 		});
@@ -522,6 +568,8 @@ public class CueSheetGUI extends JFrame {
 		trackTable.getTableHeader().setDefaultRenderer(centerRenderer);
 		
 		trackArea.setViewportView(trackTable);
+		
+		coverSaveButton.setText("Google Search");
 		
 		setLoadingGif();
 		
@@ -555,10 +603,20 @@ public class CueSheetGUI extends JFrame {
 			}
 		});
 		JMenuItem menuPlay = new JMenuItem("播放");
+		menuPlay.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				if(isCue){
+					String location = ""+(Integer.parseInt(""+trackInfo[rowNumbers[0]][ReadMachine.TRACK_MINUTEINDEX]) * 60 + Integer.parseInt(""+trackInfo[rowNumbers[0]][ReadMachine.TRACK_SECONDINDEX]));
+					ServiceMachine.playWithAppleScript(fileDirectory+"/"+albumInfo[ReadMachine.ALBUM_FILE], location);
+				}else{
+					ServiceMachine.playWithAppleScript(""+trackInfo[rowNumbers[0]][TagReadMachine.FILE_PATH], "0");
+				}
+			}
+		});
 		JMenuItem menuReset = new JMenuItem("重新載入");
 		menuReset.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				JOptionPane.showMessageDialog(null, "Coming sooooooon~");
+				JOptionPane.showMessageDialog(contentPane, "Coming sooooooon~");
 			}
 		});
 		popupMenu.add(menuInfo);

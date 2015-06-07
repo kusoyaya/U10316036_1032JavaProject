@@ -9,6 +9,9 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import javax.imageio.ImageIO;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 
 import org.json.*;
 
@@ -73,6 +76,17 @@ public class ServiceMachine {
         return image;
 	}
 	
+	public BufferedImage getNowAlbumCover(boolean resizeOrNot) throws Exception{
+		String imageUrl = json.getJSONObject("responseData").getJSONArray("results").getJSONObject(i).getString("url");
+
+        BufferedImage image = ImageIO.read(new URL(imageUrl));
+        
+        if(resizeOrNot)
+        	image = resizeTo300(image);
+        	
+        return image;
+	}
+	
 	public BufferedImage getLastAlbumCover(boolean resizeOrNot) throws Exception{
 		i--;
 		if(i<0)
@@ -96,5 +110,24 @@ public class ServiceMachine {
 		g2.dispose();
 		
 		return rImage;
+	}
+	
+	public static void playWithAppleScript(String filePath,String location){
+		String script = "tell application \"Finder\"\n"+
+							"open (\""+filePath+"\" as POSIX file) using (\"/Applications/MPlayerX.app\" as POSIX file)\n"+
+							"tell application \"MPlayerX\"\n"+
+								"delay 1\n"+
+								"pause\n"+
+								"seekto "+location+"\n"+
+								"play\n"+
+							"end tell\n"+
+						"end tell\n";
+		ScriptEngineManager mgr = new ScriptEngineManager();
+        ScriptEngine engine = mgr.getEngineByName("AppleScriptEngine");
+        try {
+			engine.eval(script);
+		} catch (ScriptException e) {
+			e.printStackTrace();
+		}
 	}
 }

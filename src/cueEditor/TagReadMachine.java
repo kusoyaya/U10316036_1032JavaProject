@@ -23,10 +23,11 @@ public class TagReadMachine {
 	public static final int TRACK_MINUTE = 5;
 	public static final int TRACK_SECOND = 6;
 	public static final int TRACK_RATE = 7;
-	public static final int TRACK_ALBUM_TITLE = 7;
-	public static final int TRACK_ALBUM_PERFORMER = 8;
-	public static final int TRACK_GENRE = 9;
-	public static final int TRACK_DATE = 10;
+	public static final int TRACK_ALBUM_TITLE = 8;
+	public static final int TRACK_ALBUM_PERFORMER = 9;
+	public static final int TRACK_GENRE = 10;
+	public static final int TRACK_DATE = 11;
+	public static final int FILE_PATH = 12;
 	
 	private String[] filePath;
 	private String[] album;
@@ -67,7 +68,7 @@ public class TagReadMachine {
 	public TagReadMachine(String[] path){
 		this.filePath = path;
 		album = new String[6];
-		track = new Object[path.length][11];
+		track = new Object[path.length][13];
 		for(int i = 0; i < path.length; i++){
 			File src = new File(path[i]);
 			try{
@@ -105,6 +106,7 @@ public class TagReadMachine {
 				track[i][TagReadMachine.TRACK_ALBUM_PERFORMER] = tag.getFirst(FieldKey.ALBUM_ARTIST);
 				track[i][TagReadMachine.TRACK_GENRE] = tag.getFirst(FieldKey.GENRE);
 				track[i][TagReadMachine.TRACK_DATE] = tag.getFirst(FieldKey.YEAR);
+				track[i][TagReadMachine.FILE_PATH] = path[i];
 			}catch(Exception e){
 				
 			}
@@ -176,6 +178,14 @@ public class TagReadMachine {
 		return image;
 	}
 	
+	public BufferedImage getNowCover(boolean resizeOrNot){
+		BufferedImage image = coverArray[i];
+		
+		if(resizeOrNot)
+			image = ServiceMachine.resizeTo300(image);
+		
+		return image;
+	}
 	public BufferedImage getLastCover(boolean resizeOrNot){
 		i--;
 		if(i<0)
@@ -189,21 +199,21 @@ public class TagReadMachine {
 		return image;
 	}
 	
-	public void writeTag(Object[][] trackInfo){
-		for(int i = 0; i < filePath.length;i++){
-			File src = new File(filePath[i]);
+	public static void writeTag(Object[][] trackInfo){
+		for(Object[] oa : trackInfo){
+			File src = new File(""+oa[FILE_PATH]);
 			try{
 				AudioFile f = AudioFileIO.read(src);
 				Tag tag = f.getTag();
-				tag.setField(FieldKey.TRACK, ""+trackInfo[i][TRACK_ORDER]);
-				tag.setField(FieldKey.TRACK_TOTAL, ""+trackInfo[i][TRACK_TOTAL]);
-				tag.setField(FieldKey.TITLE, ""+trackInfo[i][TRACK_TITLE]);
-				tag.setField(FieldKey.ARTIST,""+trackInfo[i][TRACK_PERFORMER]);
-				tag.setField(FieldKey.COMPOSER,""+trackInfo[i][TRACK_COMPOSER]);
-				tag.setField(FieldKey.ALBUM,""+trackInfo[i][TRACK_ALBUM_TITLE]);
-				tag.setField(FieldKey.ALBUM_ARTIST,""+trackInfo[i][TRACK_ALBUM_PERFORMER]);
-				tag.setField(FieldKey.GENRE,""+trackInfo[i][TRACK_GENRE]);
-				tag.setField(FieldKey.YEAR,""+trackInfo[i][TRACK_DATE]);
+				tag.setField(FieldKey.TRACK, ""+oa[TRACK_ORDER]);
+				tag.setField(FieldKey.TRACK_TOTAL, ""+oa[TRACK_TOTAL]);
+				tag.setField(FieldKey.TITLE, ""+oa[TRACK_TITLE]);
+				tag.setField(FieldKey.ARTIST,""+oa[TRACK_PERFORMER]);
+				tag.setField(FieldKey.COMPOSER,""+oa[TRACK_COMPOSER]);
+				tag.setField(FieldKey.ALBUM,""+oa[TRACK_ALBUM_TITLE]);
+				tag.setField(FieldKey.ALBUM_ARTIST,""+oa[TRACK_ALBUM_PERFORMER]);
+				tag.setField(FieldKey.GENRE,""+oa[TRACK_GENRE]);
+				tag.setField(FieldKey.YEAR,""+oa[TRACK_DATE]);
 				f.commit();
 				JOptionPane.showMessageDialog(null, "寫入完成");
 			}catch(Exception e){
