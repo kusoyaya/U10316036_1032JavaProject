@@ -88,7 +88,7 @@ public class ServiceMachine {
         return image;
 	}
 	
-	private BufferedImage resizeTo300(BufferedImage oImage){
+	public static BufferedImage resizeTo300(BufferedImage oImage){
 		BufferedImage rImage = new BufferedImage(300,300,BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2 = rImage.createGraphics();
 		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);

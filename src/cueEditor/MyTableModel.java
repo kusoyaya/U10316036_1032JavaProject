@@ -6,7 +6,8 @@ import javax.swing.table.AbstractTableModel;
 
 public class MyTableModel extends AbstractTableModel{
 	Object[][] data;
-	private String[] column = {"曲序","歌名","演出者","分鐘","秒數","幀數"};
+	protected String[] column = {"曲序","歌名","演出者","分鐘","秒數","幀數"};
+	protected boolean changed = false;
 	
 	public MyTableModel(Object[][] track){
 		this.data = track;
@@ -59,6 +60,10 @@ public class MyTableModel extends AbstractTableModel{
 		}else{
 			data[rowIndex][columnIndex] = value;
 		}
-		
+		changed =true;
+	}
+	
+	public boolean hasChanged(){
+		return changed;
 	}
 }

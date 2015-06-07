@@ -1,24 +1,21 @@
 package cueEditor;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
 
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.lang.reflect.InvocationTargetException;
-
-public class TrackInfoDialog extends JDialog {
+public class TagTrackInfoDialog extends JDialog {
 
 	private final JPanel infoPanel = new JPanel();
 	private JTextField trackTitleField;
@@ -29,13 +26,17 @@ public class TrackInfoDialog extends JDialog {
 	private boolean isAlbumTitleChanged = false;
 	private JTextField albumPerformerField;
 	private boolean isAlbumPerformerChanged = false;
-	private JTextField albumGenerateField;
-	private boolean isAlbumGenerateChanged = false;
-	private JTextField albumDateField;
-	private boolean isAlbumDateChanged = false;
+	private JTextField trackGenerateField;
+	private boolean isTrackGenerateChanged = false;
+	private JTextField trackDateField;
+	private boolean isTrackDateChanged = false;
+	private JTextField trackOrderField;
+	private boolean isTrackOrderChanged = false;
+	private JTextField trackTotalField;
+	private boolean isTrackTotalChanged = false;
 	private int[] rowsNumber;
-	private String[] albumInfo;
 	private Object[][] trackInfo;
+	
 	
 
 	
@@ -43,9 +44,8 @@ public class TrackInfoDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
-	public TrackInfoDialog(int[] rowsNumber, String[] albumInfo,Object[][] trackInfo) {
+	public TagTrackInfoDialog(int[] rowsNumber, Object[][] trackInfo) {
 		this.rowsNumber = rowsNumber;
-		this.albumInfo = albumInfo;
 		this.trackInfo = trackInfo;
 		go();
 		setModal(true);
@@ -53,7 +53,7 @@ public class TrackInfoDialog extends JDialog {
 	}
 
 	private void go(){
-		setTitle("Title");
+		setTitle("Info");
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		infoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -70,7 +70,7 @@ public class TrackInfoDialog extends JDialog {
 		trackTitleField = new JTextField();
 		trackTitlePad.add(trackTitleField);
 		trackTitleField.setColumns(20);
-		trackTitleField.setText(""+showSomething(ReadMachine.TRACK_TITLE,false));
+		trackTitleField.setText(""+showSomething(TagReadMachine.TRACK_TITLE));
 		trackTitleField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
 				isTrackTitleChanged = true;
@@ -94,7 +94,7 @@ public class TrackInfoDialog extends JDialog {
 		trackPerformerField = new JTextField();
 		trackPerformerField.setColumns(20);
 		trackPerformerPad.add(trackPerformerField);
-		trackPerformerField.setText(""+showSomething(ReadMachine.TRACK_PERFORMER,false));
+		trackPerformerField.setText(""+showSomething(TagReadMachine.TRACK_PERFORMER));
 		trackPerformerField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
 				isTrackPerformerChanged = true;
@@ -118,16 +118,16 @@ public class TrackInfoDialog extends JDialog {
 		albumTitleField = new JTextField();
 		albumTitleField.setColumns(20);
 		albumTitlePad.add(albumTitleField);
-		albumTitleField.setText(""+showSomething(ReadMachine.ALBUM_TITLE,true));
+		albumTitleField.setText(""+showSomething(TagReadMachine.TRACK_ALBUM_TITLE));
 		albumTitleField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
-				isAlbumTitleChanged = true;
+				 isAlbumTitleChanged = true;
 			}
 			public void removeUpdate(DocumentEvent e) {
-				isAlbumTitleChanged = true;
+				 isAlbumTitleChanged = true;
 			}
 			public void insertUpdate(DocumentEvent e) {
-				isAlbumTitleChanged = true;
+				 isAlbumTitleChanged = true;
 			}
 		});
 		
@@ -142,7 +142,7 @@ public class TrackInfoDialog extends JDialog {
 		albumPerformerField = new JTextField();
 		albumPerformerField.setColumns(20);
 		albumPerformerPad.add(albumPerformerField);
-		albumPerformerField.setText(""+showSomething(ReadMachine.ALBUM_PERFORMER,true));
+		albumPerformerField.setText(""+showSomething(TagReadMachine.TRACK_ALBUM_PERFORMER));
 		albumPerformerField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
 				isAlbumPerformerChanged = true;
@@ -157,43 +157,82 @@ public class TrackInfoDialog extends JDialog {
 		
 		
 		JPanel albumOtherPad = new JPanel();
+		FlowLayout flowLayout = (FlowLayout) albumOtherPad.getLayout();
 		infoPanel.add(albumOtherPad);
 		
-		JLabel albumGenerateLabel = new JLabel("專輯類型:");
-		albumOtherPad.add(albumGenerateLabel);
+		JLabel trackGenerateLabel = new JLabel("類型:");
+		albumOtherPad.add(trackGenerateLabel);
 		
-		albumGenerateField = new JTextField();
-		albumGenerateField.setColumns(10);
-		albumOtherPad.add(albumGenerateField);
-		albumGenerateField.setText(""+showSomething(ReadMachine.ALBUM_GENRE,true));
-		albumGenerateField.getDocument().addDocumentListener(new DocumentListener(){
+		trackGenerateField = new JTextField();
+		trackGenerateField.setColumns(9);
+		albumOtherPad.add(trackGenerateField);
+		trackGenerateField.setText(""+showSomething(TagReadMachine.TRACK_GENRE));
+		trackGenerateField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
-				isAlbumGenerateChanged = true;
+				isTrackGenerateChanged = true;
 			}
 			public void removeUpdate(DocumentEvent e) {
-				isAlbumGenerateChanged = true;
+				isTrackGenerateChanged = true;
 			}
 			public void insertUpdate(DocumentEvent e) {
-				isAlbumGenerateChanged = true;
+				isTrackGenerateChanged = true;
 			}
 		});
 		
-		JLabel albumDateLabel = new JLabel("專輯年份:");
-		albumOtherPad.add(albumDateLabel);
+		JLabel trackDateLabel = new JLabel("年份:");
+		albumOtherPad.add(trackDateLabel);
 		
-		albumDateField = new JTextField();
-		albumDateField.setColumns(5);
-		albumOtherPad.add(albumDateField);
-		albumDateField.setText(""+showSomething(ReadMachine.ALBUM_DATE,true));
-		albumDateField.getDocument().addDocumentListener(new DocumentListener(){
+		trackDateField = new JTextField();
+		trackDateField.setColumns(5);
+		albumOtherPad.add(trackDateField);
+		trackDateField.setText(""+showSomething(TagReadMachine.TRACK_DATE));
+		trackDateField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
-				isAlbumDateChanged = true;
+				isTrackDateChanged = true;
 			}
 			public void removeUpdate(DocumentEvent e) {
-				isAlbumDateChanged = true;
+				isTrackDateChanged = true;
 			}
 			public void insertUpdate(DocumentEvent e) {
-				isAlbumDateChanged = true;
+				isTrackDateChanged = true;
+			}
+		});
+		
+		JLabel trackOrderLabel = new JLabel("音軌:");
+		albumOtherPad.add(trackOrderLabel);
+		
+		trackOrderField = new JTextField();
+		albumOtherPad.add(trackOrderField);
+		trackOrderField.setColumns(3);
+		trackOrderField.setText(""+showSomething(TagReadMachine.TRACK_ORDER));
+		trackOrderField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isTrackOrderChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isTrackOrderChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isTrackOrderChanged = true;
+			}
+		});
+		
+		JLabel trackTotalLabel = new JLabel("/");
+		albumOtherPad.add(trackTotalLabel);
+		
+		trackTotalField = new JTextField();
+		albumOtherPad.add(trackTotalField);
+		trackTotalField.setColumns(3);
+		trackTotalField.setText(""+showSomething(TagReadMachine.TRACK_TOTAL));
+		trackTotalField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isTrackTotalChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isTrackTotalChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isTrackTotalChanged = true;
 			}
 		});
 		
@@ -205,18 +244,39 @@ public class TrackInfoDialog extends JDialog {
 		JButton okButton = new JButton("OK");
 		okButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
-				albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
-				albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
-				albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
 				if(isTrackTitleChanged){
 					for(int i : rowsNumber)
-						trackInfo[i][ReadMachine.TRACK_TITLE] = trackTitleField.getText();
+						trackInfo[i][TagReadMachine.TRACK_TITLE] = trackTitleField.getText();
 				}
 				if(isTrackPerformerChanged){
 					for(int i : rowsNumber)
-						trackInfo[i][ReadMachine.TRACK_PERFORMER] = trackPerformerField.getText();
+						trackInfo[i][TagReadMachine.TRACK_PERFORMER] = trackPerformerField.getText();
 				}
+				if(isAlbumTitleChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
+				}
+				if(isAlbumPerformerChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
+				}
+				if(isTrackGenerateChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_GENRE] = trackGenerateField.getText();
+				}
+				if(isTrackDateChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_DATE] = trackDateField.getText();
+				}
+				if(isTrackOrderChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_ORDER] = trackOrderField.getText();
+				}
+				if(isTrackTotalChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_TOTAL] = trackTotalField.getText();
+				}
+				
 				setVisible(false);
 				dispose();
 			}
@@ -238,18 +298,13 @@ public class TrackInfoDialog extends JDialog {
 			
 	}
 	
-	private Object showSomething(int thingsYouWant, boolean albumOrNot){
-		Object result = "";
+	private Object showSomething(int thingsYouWant){
+		Object result = trackInfo[rowsNumber[0]][thingsYouWant];
 		
-		if(albumOrNot){
-			result = albumInfo[thingsYouWant];
-		}else{
-			result = trackInfo[rowsNumber[0]][thingsYouWant];
-			for(int i = 1; i < rowsNumber.length;i++){
-				if(! (""+trackInfo[rowsNumber[i]][thingsYouWant]).equalsIgnoreCase(""+result)){
-					result = "[multi]";
-					break;
-				}
+		for(int i = 1; i < rowsNumber.length;i++){
+			if(! (""+trackInfo[rowsNumber[i]][thingsYouWant]).equalsIgnoreCase(""+result)){
+				result = "[multi]";
+				break;
 			}
 		}
 		
@@ -259,8 +314,9 @@ public class TrackInfoDialog extends JDialog {
 	public boolean hasChanged(){
 		boolean result = false;
 		
-		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isAlbumGenerateChanged || isAlbumDateChanged)
+		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isTrackGenerateChanged || isTrackDateChanged || isTrackOrderChanged || isTrackTotalChanged )
 			result = true;
+		
 		return result;
 	}
 }

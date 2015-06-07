@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javax.swing.JOptionPane;
+
 public class WriteMachine {
 	private File file;
 	private PrintWriter pWriter;
@@ -19,12 +21,13 @@ public class WriteMachine {
 		this.formatNumber = formatNumber;
 		try {
 			pWriter = new PrintWriter(file,"UTF-8");
+			writeAlbum();
+			writeTrack();
+			pWriter.close();
+			JOptionPane.showMessageDialog(null, "寫入完成！");
 		} catch (IOException e) {
-			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, e.getMessage(), "寫入錯誤!", JOptionPane.ERROR_MESSAGE);
 		}
-		writeAlbum();
-		writeTrack();
-		pWriter.close();
 	}
 	
 	private void writeAlbum(){
