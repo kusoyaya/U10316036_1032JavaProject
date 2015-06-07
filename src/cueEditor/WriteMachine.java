@@ -14,20 +14,16 @@ public class WriteMachine {
 	private int formatNumber;
 	private String[] forMatArray = {"WAVE","WAVE","MP3","AIFF"};
 	
-	public WriteMachine(String outputPath ,String[] albumInfo,Object[][] trackInfo, int formatNumber){
+	public WriteMachine(String outputPath ,String[] albumInfo,Object[][] trackInfo, int formatNumber) throws Exception{
 		album = albumInfo;
 		track = trackInfo;
 		file = new File(outputPath);
 		this.formatNumber = formatNumber;
-		try {
-			pWriter = new PrintWriter(file,"UTF-8");
-			writeAlbum();
-			writeTrack();
-			pWriter.close();
-			JOptionPane.showMessageDialog(null, "寫入完成！");
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(null, e.getMessage(), "寫入錯誤!", JOptionPane.ERROR_MESSAGE);
-		}
+		
+		pWriter = new PrintWriter(file,"UTF-8");
+		writeAlbum();
+		writeTrack();
+		pWriter.close();
 	}
 	
 	private void writeAlbum(){

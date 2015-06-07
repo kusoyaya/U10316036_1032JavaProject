@@ -36,24 +36,29 @@ public class TrackInfoDialog extends JDialog {
 	private int[] rowsNumber;
 	private String[] albumInfo;
 	private Object[][] trackInfo;
-	
+	private int languageNumber = 0;
+	private final String[][] languagePack = {
+			{"Title:","Artist:","Album:","Album Artist:","Album Generate:","Album Year:","Info"},
+			{"歌曲名稱:","歌曲演出者:","專輯名稱:","專輯演出者:","專輯類型:","專輯年份:","簡介"}
+	};
 
 	
 
 	/**
 	 * Create the dialog.
 	 */
-	public TrackInfoDialog(int[] rowsNumber, String[] albumInfo,Object[][] trackInfo) {
+	public TrackInfoDialog(int[] rowsNumber, String[] albumInfo,Object[][] trackInfo,int languageNumber) {
 		this.rowsNumber = rowsNumber;
 		this.albumInfo = albumInfo;
 		this.trackInfo = trackInfo;
+		this.languageNumber = languageNumber;
 		go();
 		setModal(true);
 		setVisible(true);
 	}
 
 	private void go(){
-		setTitle("Title");
+		setTitle(languagePack[languageNumber][6]);
 		setBounds(100, 100, 450, 300);
 		getContentPane().setLayout(new BorderLayout());
 		infoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -63,7 +68,7 @@ public class TrackInfoDialog extends JDialog {
 		JPanel trackTitlePad = new JPanel();
 		infoPanel.add(trackTitlePad);
 			
-		JLabel trackTitleLabel = new JLabel("歌曲名稱:");
+		JLabel trackTitleLabel = new JLabel(languagePack[languageNumber][0]);
 		trackTitlePad.add(trackTitleLabel);
 			
 			
@@ -87,7 +92,7 @@ public class TrackInfoDialog extends JDialog {
 		JPanel trackPerformerPad = new JPanel();
 		infoPanel.add(trackPerformerPad);
 			
-		JLabel trackPerformerLabel = new JLabel("歌曲演出者:");
+		JLabel trackPerformerLabel = new JLabel(languagePack[languageNumber][1]);
 		trackPerformerPad.add(trackPerformerLabel);
 			
 			
@@ -111,7 +116,7 @@ public class TrackInfoDialog extends JDialog {
 		JPanel albumTitlePad = new JPanel();
 		infoPanel.add(albumTitlePad);
 			
-		JLabel albumTitleLabel = new JLabel("專輯名稱:");
+		JLabel albumTitleLabel = new JLabel(languagePack[languageNumber][2]);
 		albumTitlePad.add(albumTitleLabel);
 			
 			
@@ -135,7 +140,7 @@ public class TrackInfoDialog extends JDialog {
 		JPanel albumPerformerPad = new JPanel();
 		infoPanel.add(albumPerformerPad);
 			
-		JLabel albumPerformerLabel = new JLabel("專輯演出者:");
+		JLabel albumPerformerLabel = new JLabel(languagePack[languageNumber][3]);
 		albumPerformerPad.add(albumPerformerLabel);
 			
 			
@@ -159,7 +164,7 @@ public class TrackInfoDialog extends JDialog {
 		JPanel albumOtherPad = new JPanel();
 		infoPanel.add(albumOtherPad);
 		
-		JLabel albumGenerateLabel = new JLabel("專輯類型:");
+		JLabel albumGenerateLabel = new JLabel(languagePack[languageNumber][4]);
 		albumOtherPad.add(albumGenerateLabel);
 		
 		albumGenerateField = new JTextField();
@@ -178,7 +183,7 @@ public class TrackInfoDialog extends JDialog {
 			}
 		});
 		
-		JLabel albumDateLabel = new JLabel("專輯年份:");
+		JLabel albumDateLabel = new JLabel(languagePack[languageNumber][5]);
 		albumOtherPad.add(albumDateLabel);
 		
 		albumDateField = new JTextField();

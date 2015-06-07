@@ -49,6 +49,7 @@ public class TagReadMachine {
 			System.out.println(f.getAudioHeader().getTrackLength());
 			System.out.println(f.getAudioHeader().getBitRate());
 			System.out.println(f.getAudioHeader().getBitRateAsNumber());
+			System.out.println(System.getProperty("user.dir"));
 			System.out.println(System.currentTimeMillis());
 			Artwork cover = tag.getFirstArtwork();
 			System.out.println(System.currentTimeMillis());
@@ -65,51 +66,29 @@ public class TagReadMachine {
 		
 	}
 	
-	public TagReadMachine(String[] path){
+	public TagReadMachine(String[] path) throws Exception{
 		this.filePath = path;
 		album = new String[6];
 		track = new Object[path.length][13];
 		for(int i = 0; i < path.length; i++){
 			File src = new File(path[i]);
-			try{
-				AudioFile f = AudioFileIO.read(src);
-				Tag tag = f.getTag();
-				if(album[ReadMachine.ALBUM_TITLE] != null && !album[ReadMachine.ALBUM_TITLE].equalsIgnoreCase(tag.getFirst(FieldKey.ALBUM))){
-					album[ReadMachine.ALBUM_TITLE] = "[multi]";
-				}else{
-					album[ReadMachine.ALBUM_TITLE] = tag.getFirst(FieldKey.ALBUM);
-				}
-				if(album[ReadMachine.ALBUM_PERFORMER] != null && !album[ReadMachine.ALBUM_PERFORMER].equalsIgnoreCase(tag.getFirst(FieldKey.ARTIST))){
-					album[ReadMachine.ALBUM_PERFORMER] = "[multi]";
-				}else{
-					album[ReadMachine.ALBUM_PERFORMER] = tag.getFirst(FieldKey.ARTIST);
-				}
-				if(album[ReadMachine.ALBUM_GENRE] != null && !album[ReadMachine.ALBUM_GENRE].equalsIgnoreCase(tag.getFirst(FieldKey.GENRE))){
-					album[ReadMachine.ALBUM_GENRE] = "[multi]";
-				}else{
-					album[ReadMachine.ALBUM_GENRE] = tag.getFirst(FieldKey.GENRE);
-				}
-				if(album[ReadMachine.ALBUM_DATE] != null && !album[ReadMachine.ALBUM_DATE].equalsIgnoreCase(tag.getFirst(FieldKey.YEAR))){
-					album[ReadMachine.ALBUM_DATE] = "[multi]";
-				}else{
-					album[ReadMachine.ALBUM_DATE] = tag.getFirst(FieldKey.YEAR);
-				}
-				track[i][TagReadMachine.TRACK_ORDER] = Integer.parseInt(tag.getFirst(FieldKey.TRACK));
-				track[i][TagReadMachine.TRACK_TOTAL] = Integer.parseInt(tag.getFirst(FieldKey.TRACK_TOTAL));
-				track[i][TagReadMachine.TRACK_TITLE] = tag.getFirst(FieldKey.TITLE);
-				track[i][TagReadMachine.TRACK_PERFORMER] = tag.getFirst(FieldKey.ARTIST);
-				track[i][TagReadMachine.TRACK_COMPOSER] = tag.getFirst(FieldKey.COMPOSER);
-				track[i][TagReadMachine.TRACK_MINUTE] = f.getAudioHeader().getTrackLength() / 60;
-				track[i][TagReadMachine.TRACK_SECOND] = f.getAudioHeader().getTrackLength() % 60;
-				track[i][TagReadMachine.TRACK_RATE] = f.getAudioHeader().getBitRateAsNumber();
-				track[i][TagReadMachine.TRACK_ALBUM_TITLE] = tag.getFirst(FieldKey.ALBUM);
-				track[i][TagReadMachine.TRACK_ALBUM_PERFORMER] = tag.getFirst(FieldKey.ALBUM_ARTIST);
-				track[i][TagReadMachine.TRACK_GENRE] = tag.getFirst(FieldKey.GENRE);
-				track[i][TagReadMachine.TRACK_DATE] = tag.getFirst(FieldKey.YEAR);
-				track[i][TagReadMachine.FILE_PATH] = path[i];
-			}catch(Exception e){
-				
-			}
+			
+			AudioFile f = AudioFileIO.read(src);
+			Tag tag = f.getTag();
+			track[i][TagReadMachine.TRACK_ORDER] = Integer.parseInt(tag.getFirst(FieldKey.TRACK));
+			track[i][TagReadMachine.TRACK_TOTAL] = Integer.parseInt(tag.getFirst(FieldKey.TRACK_TOTAL));
+			track[i][TagReadMachine.TRACK_TITLE] = tag.getFirst(FieldKey.TITLE);
+			track[i][TagReadMachine.TRACK_PERFORMER] = tag.getFirst(FieldKey.ARTIST);
+			track[i][TagReadMachine.TRACK_COMPOSER] = tag.getFirst(FieldKey.COMPOSER);
+			track[i][TagReadMachine.TRACK_MINUTE] = f.getAudioHeader().getTrackLength() / 60;
+			track[i][TagReadMachine.TRACK_SECOND] = f.getAudioHeader().getTrackLength() % 60;
+			track[i][TagReadMachine.TRACK_RATE] = f.getAudioHeader().getBitRateAsNumber();
+			track[i][TagReadMachine.TRACK_ALBUM_TITLE] = tag.getFirst(FieldKey.ALBUM);
+			track[i][TagReadMachine.TRACK_ALBUM_PERFORMER] = tag.getFirst(FieldKey.ALBUM_ARTIST);
+			track[i][TagReadMachine.TRACK_GENRE] = tag.getFirst(FieldKey.GENRE);
+			track[i][TagReadMachine.TRACK_DATE] = tag.getFirst(FieldKey.YEAR);
+			track[i][TagReadMachine.FILE_PATH] = path[i];
+			
 		}
 	}
 	
@@ -199,26 +178,22 @@ public class TagReadMachine {
 		return image;
 	}
 	
-	public static void writeTag(Object[][] trackInfo){
+	public static void writeTag(Object[][] trackInfo) throws Exception{
 		for(Object[] oa : trackInfo){
 			File src = new File(""+oa[FILE_PATH]);
-			try{
-				AudioFile f = AudioFileIO.read(src);
-				Tag tag = f.getTag();
-				tag.setField(FieldKey.TRACK, ""+oa[TRACK_ORDER]);
-				tag.setField(FieldKey.TRACK_TOTAL, ""+oa[TRACK_TOTAL]);
-				tag.setField(FieldKey.TITLE, ""+oa[TRACK_TITLE]);
-				tag.setField(FieldKey.ARTIST,""+oa[TRACK_PERFORMER]);
-				tag.setField(FieldKey.COMPOSER,""+oa[TRACK_COMPOSER]);
-				tag.setField(FieldKey.ALBUM,""+oa[TRACK_ALBUM_TITLE]);
-				tag.setField(FieldKey.ALBUM_ARTIST,""+oa[TRACK_ALBUM_PERFORMER]);
-				tag.setField(FieldKey.GENRE,""+oa[TRACK_GENRE]);
-				tag.setField(FieldKey.YEAR,""+oa[TRACK_DATE]);
-				f.commit();
-				JOptionPane.showMessageDialog(null, "寫入完成");
-			}catch(Exception e){
-				JOptionPane.showMessageDialog(null, e.getMessage(), "寫入錯誤!", JOptionPane.ERROR_MESSAGE);
-			}
+			
+			AudioFile f = AudioFileIO.read(src);
+			Tag tag = f.getTag();
+			tag.setField(FieldKey.TRACK, ""+oa[TRACK_ORDER]);
+			tag.setField(FieldKey.TRACK_TOTAL, ""+oa[TRACK_TOTAL]);
+			tag.setField(FieldKey.TITLE, ""+oa[TRACK_TITLE]);
+			tag.setField(FieldKey.ARTIST,""+oa[TRACK_PERFORMER]);
+			tag.setField(FieldKey.COMPOSER,""+oa[TRACK_COMPOSER]);
+			tag.setField(FieldKey.ALBUM,""+oa[TRACK_ALBUM_TITLE]);
+			tag.setField(FieldKey.ALBUM_ARTIST,""+oa[TRACK_ALBUM_PERFORMER]);
+			tag.setField(FieldKey.GENRE,""+oa[TRACK_GENRE]);
+			tag.setField(FieldKey.YEAR,""+oa[TRACK_DATE]);
+			f.commit();	
 		}
 	}
 	

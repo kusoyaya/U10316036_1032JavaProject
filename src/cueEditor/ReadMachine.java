@@ -13,7 +13,7 @@ public class ReadMachine {
 	private Matcher matcher;
 	private String[] album ;
 	private Object[][] track;
-	private int audioFormat;
+	private int audioFormat = 0;
 	private ArrayList<String> trackTitle = new ArrayList<String>();
 	private ArrayList<String> trackPerformer = new ArrayList<String>();
 	private ArrayList<String> trackMinuteIndex = new ArrayList<String>();
@@ -35,14 +35,12 @@ public class ReadMachine {
 	public static final int FORMAT_MP3 = 2;
 	public static final int FORMAT_AIFF = 3;
 	
-	public ReadMachine(String path ,String encode){
+	public ReadMachine(String path ,String encode) throws Exception{
 		album = new String[6];
-		try{
-			file = new File(path);
-			input = new Scanner(file,encode);
-		}catch(Exception e){
-			e.printStackTrace();
-		}
+		
+		file = new File(path);
+		input = new Scanner(file,encode);
+		
 		while(input.hasNextLine()){
 			String s = input.nextLine();
 			if(isBeforeTrackOne){
@@ -52,15 +50,12 @@ public class ReadMachine {
 			}
 			if(s.matches("\\s*TRACK\\s*01\\s*AUDIO\\s*")){
 				isBeforeTrackOne = false;
-				System.out.println("hi");
 			}		
 		}
 		transToArray();
-		try{
-			audioFormat = getAudioFormat(album[ALBUM_FILE]);
-		}catch(Exception e){
-			audioFormat = 0;
-		}
+		
+		audioFormat = getAudioFormat(album[ALBUM_FILE]);
+		
 	}
 	
 	private void mainInfo(String s){
@@ -174,19 +169,5 @@ public class ReadMachine {
 		return result;
 	}
 	
-	public static void main(String[] args){
-		ReadMachine a = new ReadMachine("/Users/nasirho/Desktop/testgbk.cue","GBK");
-		for(String s: a.album){
-			System.out.println(s);
-		}
-		System.out.println("===");
-		System.out.println(a.audioFormat);
-		System.out.println("===");
-		for(Object[] ss : a.track){
-			for(Object s : ss){
-				System.out.println(s);
-			}
-			System.out.println("======");
-		}
-	}
+	
 }

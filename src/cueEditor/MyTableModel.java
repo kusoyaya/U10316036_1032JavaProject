@@ -6,11 +6,25 @@ import javax.swing.table.AbstractTableModel;
 
 public class MyTableModel extends AbstractTableModel{
 	Object[][] data;
-	protected String[] column = {"曲序","歌名","演出者","分鐘","秒數","幀數"};
+	protected String[] column;
 	protected boolean changed = false;
 	
-	public MyTableModel(Object[][] track){
+	protected MyTableModel(Object[][] track){
 		this.data = track;
+	}
+	
+	public MyTableModel(Object[][] track, int languageNumber){
+		this.data = track;
+		switch(languageNumber){
+		case 0:
+			column = new String[]{"No.","Title","Artist","Minute","Second","Frame"};
+			break;
+		case 1:
+			column = new String[]{"曲序","歌名","演出者","分鐘","秒數","幀數"};
+			break;
+		default:
+			column = new String[]{"No.","Title","Artist","Minute","Second","Frame"};
+		}
 	}
 
 	@Override

@@ -4,9 +4,18 @@ import javax.swing.table.AbstractTableModel;
 
 public class MyTagTableModel extends MyTableModel{
 	
-	public MyTagTableModel(Object[][] track){
+	public MyTagTableModel(Object[][] track,int languageNumber){
 		super(track);
-		column = new String[]{"曲序","總共","歌名","演出者","作曲者","分鐘","秒數","碼率"};
+		switch(languageNumber){
+		case 0:
+			column = new String[]{"No.","Total","Title","Artist","Composer","Minute","Second","Bitrate"};
+			break;
+		case 1:
+			column = new String[]{"曲序","總共","歌名","演出者","作曲者","分鐘","秒數","碼率"};
+			break;
+		default:
+			column = new String[]{"No.","Total","Title","Artist","Composer","Minute","Second","Bitrate"};
+		}
 	}
 
 	@Override
