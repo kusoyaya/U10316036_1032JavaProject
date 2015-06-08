@@ -2,39 +2,22 @@ package cueEditor;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ReadMachine {
+public class CueReadMachine {
+
 	private String[] albumInfo;
 	private Object[][] trackInfo;
 	private ArrayList<String> albumNotSupport = new ArrayList<String>();
 	
 	private final String[] albumPatternArray = {"\\s*TITLE\\s*\".*\"","\\s*PERFORMER\\s*\".*\"","\\s*FILE\\s*\".*\".*","\\s*COMPOSER\\s*\".*\"","\\s*REM\\s*GENRE\\s*\".*\"","\\s*REM\\s*DATE\\s*\".*\"","\\s*REM\\s*COMMENT\\s*\".*\""};
 	private final String[] trackPatternArray =  {"\\s*TITLE\\s*\".*\"","\\s*PERFORMER\\s*\".*\"","\\s*COMPOSER\\s*\".*\"","\\s*INDEX\\s*01\\s*\\d\\d:\\d\\d:\\d\\d","\\s*INDEX\\s*00\\s*\\d\\d:\\d\\d:\\d\\d"};
-	public static final int ALBUM_TITLE = 0;
-	public static final int ALBUM_PERFORMER = 1;
-	public static final int ALBUM_FILE = 2;
-	public static final int ALBUM_COMPOSER = 3;
-	public static final int ALBUM_GENRE = 4;
-	public static final int ALBUM_DATE = 5;
-	public static final int ALBUM_COMMENT = 6;
-	public static final int TRACK_ORDER = 0;
-	public static final int TRACK_TITLE = 1;
-	public static final int TRACK_PERFORMER = 2;
-	public static final int TRACK_COMPOSER = 3;
-	public static final int TRACK_MINUTEINDEX = 4;
-	public static final int TRACK_SECONDINDEX = 5;
-	public static final int TRACK_FRAMEINDEX = 6;
-	public static final int TRACK_MINUTEPREINDEX = 7;
-	public static final int TRACK_SECONDPREINDEX = 8;
-	public static final int TRACK_FRAMEPREINDEX = 9;
-	public static final int FORMAT_WAVE = 1;
-	public static final int FORMAT_MP3 = 2;
-	public static final int FORMAT_AIFF = 3;
 	
-	public ReadMachine(String path ,String encode) throws Exception{
+	
+	public CueReadMachine(String path, String encode) throws Exception{
 		File src = new File(path);
 		Scanner input = new Scanner(src,encode);
 		
@@ -59,9 +42,7 @@ public class ReadMachine {
 			}
 		
 		input.close();
-		
 	}
-	
 	
 	private boolean setAlbumInfo(String s){
 		boolean isAlbum = true;
@@ -92,9 +73,9 @@ public class ReadMachine {
 					break;
 				}else if(s.matches(trackPatternArray[i]) && i >= 3){
 					String[] tmp = s.split(":");
-					trackInfo[trackIndexNumber][3 * i - 5] = Integer.parseInt(tmp[0].substring(tmp[0].length() -2));
-					trackInfo[trackIndexNumber][3 * i - 4] = Integer.parseInt(tmp[1]);
-					trackInfo[trackIndexNumber][3 * i - 3] = Integer.parseInt(tmp[2]);
+					trackInfo[trackIndexNumber][3 * i - 5] = tmp[0].substring(tmp[0].length() -2);
+					trackInfo[trackIndexNumber][3 * i - 4] = tmp[1];
+					trackInfo[trackIndexNumber][3 * i - 3] = tmp[2];
 					//3 * (i - 2 ) + 1
 				}
 			}
@@ -128,18 +109,21 @@ public class ReadMachine {
 		return temp;
 	}
 	
-	public String[] getAlbumInfo(){
+	public String[] getAlbum(){
 		return albumInfo;
 	}
 	
-	public Object[][] getTrackInfo(){
+	
+	public Object[][] getTrack(){
 		return trackInfo;
 	}
 	
-	public ArrayList<String> getAlbumNotSupport(){
-		return albumNotSupport;
+	
+	public static void main(String[] args) throws Throwable{
+		CueReadMachine crm = new CueReadMachine("/Users/nasirho/Desktop/test.cue","UTF-8");
+		System.out.println(Arrays.toString(crm.getAlbum()));
+		for(Object[]oa:crm.getTrack())
+			System.out.println(Arrays.toString(oa));
+		
 	}
-	
-	
-	
 }

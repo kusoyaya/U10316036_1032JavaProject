@@ -113,15 +113,32 @@ public class ServiceMachine {
 	}
 	
 	public static void playWithAppleScript(String filePath,String location){
-		String script = "tell application \"Finder\"\n"+
-							"open (\""+filePath+"\" as POSIX file) using (\"/Applications/MPlayerX.app\" as POSIX file)\n"+
-							"tell application \"MPlayerX\"\n"+
-								"delay 1\n"+
-								"pause\n"+
-								"seekto "+location+"\n"+
-								"play\n"+
+		String script = "set missApp to false\n"+
+						"try\n"+
+							"tell application \"Finder\"\n"+
+								"open (\"/Applications/MplayerX.app\" as POSIX file)\n"+
 							"end tell\n"+
-						"end tell\n";
+						"on error errText number errNum\n"+
+							"display dialog \"MPlayerX isn't in your Mac! Please click Download and follow the install instruction.\" "
+							+ "buttons {\"Download\"} default button {\"Download\"} with title \"Cannot find MPlayerX\" giving up after 5\n"+
+							"open location \"http://mplayerx.org\"\n"+
+							"set missApp to true\n"+
+						"end try\n"+
+						"if missApp = false then\n"+
+							"try\n"+
+								"tell application \"Finder\"\n"+
+									"open (\""+filePath+"\" as POSIX file) using (\"/Applications/MPlayerX.app\" as POSIX file)\n"+
+									"tell application \"MPlayerX\"\n"+
+										"delay 1\n"+
+										"pause\n"+
+										"seekto "+location+"\n"+
+										"play\n"+
+									"end tell\n"+
+								"end tell\n"+
+							"on error errText number errNum\n"+
+								"display alert \"Error\" message \"Cannot find the file!\" as warning\n"+
+							"end try\n"+
+						"end if\n";
 		ScriptEngineManager mgr = new ScriptEngineManager();
         ScriptEngine engine = mgr.getEngineByName("AppleScriptEngine");
         try {

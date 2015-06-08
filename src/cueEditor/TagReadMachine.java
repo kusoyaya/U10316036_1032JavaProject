@@ -28,6 +28,7 @@ public class TagReadMachine {
 	public static final int TRACK_GENRE = 10;
 	public static final int TRACK_DATE = 11;
 	public static final int FILE_PATH = 12;
+	public static final int TRACK_COMMENT = 13;
 	
 	private String[] filePath;
 	private String[] album;
@@ -68,8 +69,9 @@ public class TagReadMachine {
 	
 	public TagReadMachine(String[] path) throws Exception{
 		this.filePath = path;
-		album = new String[6];
-		track = new Object[path.length][13];
+		
+		track = new Object[path.length][14];
+		
 		for(int i = 0; i < path.length; i++){
 			File src = new File(path[i]);
 			
@@ -88,6 +90,7 @@ public class TagReadMachine {
 			track[i][TagReadMachine.TRACK_GENRE] = tag.getFirst(FieldKey.GENRE);
 			track[i][TagReadMachine.TRACK_DATE] = tag.getFirst(FieldKey.YEAR);
 			track[i][TagReadMachine.FILE_PATH] = path[i];
+			track[i][TagReadMachine.TRACK_COMMENT] = tag.getFirst(FieldKey.COMMENT);
 			
 		}
 	}
@@ -97,7 +100,7 @@ public class TagReadMachine {
 	}
 	
 	public static String[] getAlbum(Object[][] track){
-		String[] album = new String[6];
+		String[] album = new String[7];
 		
 		for(int i = 0 ; i < track.length; i++){
 			if(album[ReadMachine.ALBUM_TITLE] != null && !album[ReadMachine.ALBUM_TITLE].equalsIgnoreCase((String)track[i][TagReadMachine.TRACK_ALBUM_TITLE])){
@@ -119,6 +122,11 @@ public class TagReadMachine {
 				album[ReadMachine.ALBUM_DATE] = "[multi]";
 			}else{
 				album[ReadMachine.ALBUM_DATE] = (String)track[i][TagReadMachine.TRACK_DATE];
+			}
+			if(album[ReadMachine.ALBUM_COMMENT] != null && !album[ReadMachine.ALBUM_COMMENT].equalsIgnoreCase((String)track[i][TagReadMachine.TRACK_COMMENT])){
+				album[ReadMachine.ALBUM_COMMENT] = "[multi]";
+			}else{
+				album[ReadMachine.ALBUM_COMMENT] = (String)track[i][TagReadMachine.TRACK_COMMENT];
 			}
 		}
 		
@@ -193,6 +201,7 @@ public class TagReadMachine {
 			tag.setField(FieldKey.ALBUM_ARTIST,""+oa[TRACK_ALBUM_PERFORMER]);
 			tag.setField(FieldKey.GENRE,""+oa[TRACK_GENRE]);
 			tag.setField(FieldKey.YEAR,""+oa[TRACK_DATE]);
+			tag.setField(FieldKey.COMMENT,""+oa[TRACK_COMMENT]);
 			f.commit();	
 		}
 	}

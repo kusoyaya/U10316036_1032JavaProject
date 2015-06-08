@@ -46,6 +46,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Properties;
 import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
@@ -56,39 +57,10 @@ import java.awt.Font;
 public class CueSheetGUI extends JFrame {
 
 	private JPanel contentPane;
+	private JPanel controlPad;
 	private JButton loadButton;
 	private JComboBox<String> encodeBox;
-	private ReadMachine cueInput;
-	private TagReadMachine tagInput;
-	private ServiceMachine service = new ServiceMachine();
-	private JLabel albumTitleLabel;
-	private JTextField albumTitleField;
-	private JLabel albumPefromerLabel;
-	private JTextField albumPerformerField;
-	private JLabel albumFileLabel;
-	private JTextField albumFileField;
-	private JScrollPane trackArea;
-	private JTable trackTable;
-	private MyTableModel trackTableModel;
-	private String fileName = "";
-	private String filePath = "";
-	private String fileDirectory = "";
-	private int fileFormat;
-	private String[] albumInfo;
-	private Object[][] trackInfo;
-	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
 	private JButton testButton;
-	private JPanel albumGeneratePad;
-	private JLabel albumGenerateLabel;
-	private JTextField albumGenerateField;
-	private JPanel controlPad;
-	private JPanel albumDatePad;
-	private JLabel albumDateLabel;
-	private JTextField albumDateField;
-	private JButton albumFileButton;
-	private boolean isCue;
-	private boolean hasSomethingChanged = false;
-	private boolean hasCover = false;
 	private JPanel albumInfoArea;
 	private ImageIcon albumCoverIcon;
 	private JLabel albumCoverLabel;
@@ -96,14 +68,47 @@ public class CueSheetGUI extends JFrame {
 	private JButton coverLastButton;
 	private JButton coverNextButton;
 	private JButton coverSaveButton;
+	private JLabel albumTitleLabel;
+	private JTextField albumTitleField;
+	private JLabel albumPefromerLabel;
+	private JTextField albumPerformerField;
+	private JLabel albumFileLabel;
+	private JTextField albumFileField;
+	private JButton albumFileButton;
+	private JPanel albumGenerateAndDatePad;
+	private JLabel albumGenerateLabel;
+	private JTextField albumGenerateField;
+	private JLabel albumDateLabel;
+	private JTextField albumDateField;
+	private JPanel albumCommentPad;
+	private JLabel albumCommentLabel;
+	private JTextField albumCommentField;
+	private JScrollPane trackArea;
+	private JTable trackTable;
+	private MyTableModel trackTableModel;
+	
+	private String fileName = "";
+	private String filePath = "";
+	private String fileDirectory = "";
+	private int fileFormat;
+	private String[] albumInfo;
+	private Object[][] trackInfo;
+	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
+	private boolean isCue;
+	private boolean hasSomethingChanged = false;
+	private boolean hasCover = false;
 	private Properties properties;
 	private int languageNumber = 0;
 	private final String[][] languagePack = {
 			{"Some changes haven't saved yet, are you sure to close?","Load File","Load Error","Write File","You have done something changes, are you sure to save them?","Write successful!","Write Error!","Last","Next","Save Cover","Save completed","Redo",
-				"Album:","Album Artist:","Source File:","Connect File","Album Generate:","Album Year:","Info","Play","Reset"},
+				"Album:","Album Artist:","Source File:","Connect File","Album Generate:","Album Year:","Info","Play","Reload","Album Comment:","Some changes haven't saved yet, are you sure to open another file?"},
 			{"你做了一些改動尚未儲存，確定要關閉了嗎？","讀取檔案","讀取錯誤","存入檔案","你已經做了一些改動，確定要儲存了嗎？","寫入完成！","寫入錯誤!","上一張","下一張","儲存封面","儲存完成","還原",
-				"專輯名稱:","專輯演出者:","來源檔案:","關聯檔案","專輯類型:","專輯年份:","簡介","播放","重新載入"}
+				"專輯名稱:","專輯演出者:","來源檔案:","關聯檔案","專輯類型:","專輯年份:","簡介","播放","重新載入","專輯註記:","你做了一些改動尚未儲存，確定要載入另外一個文件了嗎？"}
 			};
+	
+	private ReadMachine cueInput;
+	private TagReadMachine tagInput;
+	private ServiceMachine service = new ServiceMachine();
 
 	/**
 	 * Launch the application.
@@ -142,29 +147,26 @@ public class CueSheetGUI extends JFrame {
 		default:
 			languageNumber = 0;
 		}
+		
 		setTitle("SimpleCueEditor v0.9");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter(){
 			@Override
 			public void windowClosing(WindowEvent e){
-				try{
-					if(trackTableModel.hasChanged()){
-						hasSomethingChanged = true;
-					}
-					if(hasSomethingChanged){
-						if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][0]) == JOptionPane.YES_OPTION){
-							System.exit(0);
-						}
-					}else{
+				if(testButton.isEnabled() && trackTableModel.hasChanged())
+					hasSomethingChanged = true;
+				if(hasSomethingChanged){
+					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][0]) == JOptionPane.YES_OPTION){
 						System.exit(0);
 					}
-				}catch(Exception ex){
+				}else{
 					System.exit(0);
 				}
 			}
 		});
 		setBounds(100, 100, 800, 600);
+		
 		setMacThing();
 		
 		contentPane = new JPanel();
@@ -183,58 +185,13 @@ public class CueSheetGUI extends JFrame {
 		controlPad.add(loadButton);
 		loadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				File[] selectedFiles = null;
-				
-				FileDialog fileChooser = new FileDialog(new Frame(),languagePack[languageNumber][1],FileDialog.LOAD);
-				fileChooser.setFilenameFilter(new FilenameFilter(){
-					public boolean accept(File dir, String name){
-						return (name.endsWith(".cue") || name.endsWith(".m4a") || name.endsWith(".mp3") || name.endsWith(".flac") || name.endsWith(".ogg"));
-					}
-				});
-				fileChooser.setMultipleMode(true);
-				fileChooser.setModal(true);
-				fileChooser.setVisible(true);
-				selectedFiles = fileChooser.getFiles();
-				if(selectedFiles.length > 0){
-					if(selectedFiles[0].getName().split("\\.")[selectedFiles[0].getName().split("\\.").length-1].equalsIgnoreCase("cue")){
-						try {
-							cueInput = new ReadMachine(selectedFiles[0].getAbsolutePath(),(String)encodeBox.getSelectedItem());
-							isCue = true;
-							encodeBox.setEnabled(true);
-							testButton.setEnabled(true);
-							albumFileButton.setEnabled(true);
-							filePath = selectedFiles[0].getAbsolutePath();
-							fileName = selectedFiles[0].getName();
-							fileDirectory = selectedFiles[0].getParent();
-							setTitle(getTitle()+" - "+selectedFiles[0].getName());
-							albumInfo = cueInput.getAlbumInfo();
-							trackInfo = cueInput.getTrackInfo();
-							fileFormat = cueInput.getAudioFormat();
-							setAlbumField();
-							setTable();
-						} catch (Exception e1) {
-							JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
-						}
-						
-					}else{
-						String[] paths = new String[selectedFiles.length];
-						for(int i = 0; i < selectedFiles.length; i++)
-							paths[i] = selectedFiles[i].getAbsolutePath();
-						try {
-							tagInput = new TagReadMachine(paths);
-							isCue = false;
-							testButton.setEnabled(true);
-							trackInfo = tagInput.getTrack();
-							albumInfo = TagReadMachine.getAlbum(trackInfo);
-							setAlbumField();
-							setTagTable();
-							encodeBox.setEnabled(false);
-							albumFileButton.setEnabled(false);
-						} catch (Exception e1) {
-							JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
-						}
-					}
-					
+				if(testButton.isEnabled() && trackTableModel.hasChanged())
+					hasSomethingChanged = true;
+				if(hasSomethingChanged){
+					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][22]) == JOptionPane.YES_OPTION)
+						loadFile();
+				}else{
+					loadFile();
 				}
 			}
 		});
@@ -249,7 +206,6 @@ public class CueSheetGUI extends JFrame {
 						cueInput = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
 						albumInfo = cueInput.getAlbumInfo();
 						trackInfo = cueInput.getTrackInfo();
-						fileFormat = cueInput.getAudioFormat();
 						setTable();
 					} catch (Exception e1) {
 						JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
@@ -273,16 +229,21 @@ public class CueSheetGUI extends JFrame {
 				if(hasSomethingChanged){
 					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][4]) == JOptionPane.YES_OPTION){
 						if(isCue){
+							WriteMachine wm = null;
 							try {
-								new WriteMachine(fileDirectory+"/"+fileName,albumInfo,trackInfo,fileFormat);
+								wm = new WriteMachine(fileDirectory+"/"+fileName,albumInfo,trackInfo,fileFormat);
 								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
+								hasSomethingChanged = false;
 							} catch (Exception e1) {
 								JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
+							} finally{
+								wm.close();
 							}
 						}else{
 							try {
 								TagReadMachine.writeTag(trackInfo);
 								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
+								hasSomethingChanged = false;
 							} catch (Exception e1) {
 								JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
 							}
@@ -310,7 +271,7 @@ public class CueSheetGUI extends JFrame {
 		
 		albumArea.add(Box.createGlue());
 		
-		albumCoverLabel = new JLabel("");
+		albumCoverLabel = new JLabel();
 		albumCoverLabel.setMaximumSize(new Dimension(300, 300));
 		albumCoverArea.add(albumCoverLabel);
 		albumCoverLabel.setPreferredSize(new Dimension(300, 300));
@@ -489,18 +450,21 @@ public class CueSheetGUI extends JFrame {
 		albumFileButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(isCue){
-					File selectedFile = null;
+					File[] selectedFiles = null;
 					
-					JFileChooser fileChooser = new JFileChooser();
-					FileFilter filter = new FileNameExtensionFilter("Audio File","wav","ape","m4a","mp3","tak","tta");
-					fileChooser.setFileFilter(filter);
-					int result = fileChooser.showOpenDialog(loadButton);
-					if (result == JFileChooser.APPROVE_OPTION) {
-						selectedFile = fileChooser.getSelectedFile();
-					}
-					if(selectedFile != null){
-						fileFormat = ReadMachine.getAudioFormat(selectedFile.getName());
-						albumFileField.setText(selectedFile.getName());
+					FileDialog fileChooser = new FileDialog(new Frame(),languagePack[languageNumber][1],FileDialog.LOAD);
+					fileChooser.setFilenameFilter(new FilenameFilter(){
+						public boolean accept(File dir, String name){
+							return (name.endsWith(".wav") || name.endsWith(".ape") || name.endsWith(".mp3") || name.endsWith(".flac") 
+									|| name.endsWith(".ogg")|| name.endsWith(".m4a")|| name.endsWith(".tak")|| name.endsWith(".tta"));
+						}
+					});
+					fileChooser.setMultipleMode(false);
+					fileChooser.setModal(true);
+					fileChooser.setVisible(true);
+					selectedFiles = fileChooser.getFiles();
+					if(selectedFiles.length > 0 ){
+						albumFileField.setText(selectedFiles[0].getName());
 					}
 				}
 			}
@@ -508,12 +472,12 @@ public class CueSheetGUI extends JFrame {
 		albumFilePad.add(albumFileButton);
 		
 		
-		albumGeneratePad = new JPanel();
-		FlowLayout flowLayout_3 = (FlowLayout) albumGeneratePad.getLayout();
+		albumGenerateAndDatePad = new JPanel();
+		FlowLayout flowLayout_3 = (FlowLayout) albumGenerateAndDatePad.getLayout();
 		flowLayout_3.setAlignment(FlowLayout.LEFT);
 		
 		albumGenerateLabel = new JLabel(languagePack[languageNumber][16]);
-		albumGeneratePad.add(albumGenerateLabel);
+		albumGenerateAndDatePad.add(albumGenerateLabel);
 		
 		albumGenerateField = new JTextField();
 		albumGenerateField.addActionListener(new ActionListener() {
@@ -524,17 +488,14 @@ public class CueSheetGUI extends JFrame {
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
 				}
+				hasSomethingChanged = true;
 			}
 		});
 		albumGenerateField.setColumns(10);
-		albumGeneratePad.add(albumGenerateField);
-		
-		albumDatePad = new JPanel();
-		FlowLayout flowLayout_4 = (FlowLayout) albumDatePad.getLayout();
-		flowLayout_4.setAlignment(FlowLayout.LEFT);
+		albumGenerateAndDatePad.add(albumGenerateField);
 		
 		albumDateLabel = new JLabel(languagePack[languageNumber][17]);
-		albumDatePad.add(albumDateLabel);
+		albumGenerateAndDatePad.add(albumDateLabel);
 		
 		albumDateField = new JTextField();
 		albumDateField.addActionListener(new ActionListener() {
@@ -545,17 +506,40 @@ public class CueSheetGUI extends JFrame {
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_DATE] = albumDateField.getText();
 				}
+				hasSomethingChanged = true;
 			}
 		});
 		albumDateField.setColumns(5);
-		albumDatePad.add(albumDateField);
+		albumGenerateAndDatePad.add(albumDateField);
+		
+		albumCommentPad = new JPanel();
+		FlowLayout flowLayout_4 = (FlowLayout) albumCommentPad.getLayout();
+		flowLayout_4.setAlignment(FlowLayout.LEFT);
+		
+		albumCommentLabel = new JLabel(languagePack[languageNumber][21]);
+		albumCommentPad.add(albumCommentLabel);
+		
+		albumCommentField = new JTextField();
+		albumCommentField.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e){
+				if(isCue){
+					albumInfo[ReadMachine.ALBUM_COMMENT] = albumCommentField.getText();
+				}else{
+					for(Object[] oa: trackInfo)
+						oa[TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
+				}
+				hasSomethingChanged = true;
+			}
+		});
+		albumCommentField.setColumns(15);
+		albumCommentPad.add(albumCommentField);
 		
 		albumInfoArea.add(Box.createGlue());
 		albumInfoArea.add(albumTItilePad);
 		albumInfoArea.add(albumPerformerPad);
 		albumInfoArea.add(albumFilePad);
-		albumInfoArea.add(albumGeneratePad);
-		albumInfoArea.add(albumDatePad);
+		albumInfoArea.add(albumGenerateAndDatePad);
+		albumInfoArea.add(albumCommentPad);
 		albumInfoArea.add(Box.createGlue());
 		
 		trackArea = new JScrollPane();
@@ -571,9 +555,7 @@ public class CueSheetGUI extends JFrame {
 						
 						int[] rowNumber = {trackTable.rowAtPoint(p)};
 						
-						System.out.println(rowNumber);
-						
-						showPopUp(e,rowNumber);
+						trackTable.setRowSelectionInterval(rowNumber[0], rowNumber[rowNumber.length-1]);
 					}
 					showPopUp(e,trackTable.getSelectedRows());
 				}
@@ -584,12 +566,73 @@ public class CueSheetGUI extends JFrame {
 		
 	}
 	
+	private void loadFile(){
+		File[] selectedFiles = null;
+		
+		FileDialog fileChooser = new FileDialog(new Frame(),languagePack[languageNumber][1],FileDialog.LOAD);
+		fileChooser.setFilenameFilter(new FilenameFilter(){
+			public boolean accept(File dir, String name){
+				return (name.endsWith(".cue") || name.endsWith(".m4a") || name.endsWith(".mp3") || name.endsWith(".flac") || name.endsWith(".ogg"));
+			}
+		});
+		fileChooser.setMultipleMode(true);
+		fileChooser.setModal(true);
+		fileChooser.setVisible(true);
+		selectedFiles = fileChooser.getFiles();
+		if(selectedFiles.length > 0){
+			if(selectedFiles[0].getName().split("\\.")[selectedFiles[0].getName().split("\\.").length-1].equalsIgnoreCase("cue")){
+				try {
+					cueInput = new ReadMachine(selectedFiles[0].getAbsolutePath(),(String)encodeBox.getSelectedItem());
+					isCue = true;
+					encodeBox.setEnabled(true);
+					testButton.setEnabled(true);
+					albumFileButton.setEnabled(true);
+					hasSomethingChanged = false;
+					
+					filePath = selectedFiles[0].getAbsolutePath();
+					fileName = selectedFiles[0].getName();
+					fileDirectory = selectedFiles[0].getParent();
+					
+					albumInfo = cueInput.getAlbumInfo();
+					trackInfo = cueInput.getTrackInfo();
+					setTitle(getTitle()+" - "+fileName);
+					setAlbumField();
+					setTable();
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
+				}
+				
+			}else{
+				String[] paths = new String[selectedFiles.length];
+				for(int i = 0; i < selectedFiles.length; i++)
+					paths[i] = selectedFiles[i].getAbsolutePath();
+				try {
+					tagInput = new TagReadMachine(paths);
+					isCue = false;
+					hasSomethingChanged = false;
+					testButton.setEnabled(true);
+					trackInfo = tagInput.getTrack();
+					albumInfo = TagReadMachine.getAlbum(trackInfo);
+					setAlbumField();
+					setTagTable();
+					encodeBox.setEnabled(false);
+					albumFileButton.setEnabled(false);
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
+					e1.printStackTrace();
+				}
+			}
+			
+		}
+	}
+	
 	private void setAlbumField(){
 		albumTitleField.setText(albumInfo[ReadMachine.ALBUM_TITLE]);
 		albumPerformerField.setText(albumInfo[ReadMachine.ALBUM_PERFORMER]);
 		albumFileField.setText(albumInfo[ReadMachine.ALBUM_FILE]);
 		albumGenerateField.setText(albumInfo[ReadMachine.ALBUM_GENRE]);
 		albumDateField.setText(albumInfo[ReadMachine.ALBUM_DATE]);
+		albumCommentField.setText(albumInfo[ReadMachine.ALBUM_COMMENT]);
 	}
 
 	private void setTable(){
@@ -769,5 +812,6 @@ public class CueSheetGUI extends JFrame {
 		albumFileButton.setText(languagePack[languageNumber][15]);
 		albumGenerateLabel.setText(languagePack[languageNumber][16]);
 		albumDateLabel.setText(languagePack[languageNumber][17]);
+		albumCommentLabel.setText(languagePack[languageNumber][21]);
 	}
 }

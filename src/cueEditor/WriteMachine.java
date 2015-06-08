@@ -43,5 +43,7 @@ public class WriteMachine {
 		}
 	}
 	
-	
+	public void close(){
+		pWriter.close();
+	}
 }
