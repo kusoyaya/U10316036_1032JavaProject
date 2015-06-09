@@ -17,9 +17,9 @@ import javax.script.ScriptException;
 import org.json.*;
 
 public class ServiceMachine {
-	private boolean hasCover = false;
+	
 	JSONObject json;
-	int i = -1;
+	int i = 0;
 	
 	public static BufferedImage getAlbumCover(String albumInfo) throws Exception{
 		String require = albumInfo+" cover";
@@ -41,7 +41,7 @@ public class ServiceMachine {
 	}
 	
 	public boolean hasCover(String albumInfo){
-		i = -1;
+		i = 0;
 		try{
 			String require = albumInfo+" cover";
 	    	URL url = new URL("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q="+java.net.URLEncoder.encode(require, "UTF-8"));
@@ -55,11 +55,11 @@ public class ServiceMachine {
 	        }
 
 	        json = new JSONObject(builder.toString());
-	        hasCover= true;
+	        return true;
 		}catch(Exception e){
-			hasCover= false;
+			return false;
 		}
-		return hasCover;
+		
 	}
 	
 	public BufferedImage getNextAlbumCover(boolean resizeOrNot) throws Exception{

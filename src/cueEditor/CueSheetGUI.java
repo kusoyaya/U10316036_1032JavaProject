@@ -90,21 +90,24 @@ public class CueSheetGUI extends JFrame {
 	private JTable trackTable;
 	private MyTableModel trackTableModel;
 	
+	private int fileType = 0;
+	private int coverType = 0;
+	private boolean hasCover = false;
 	private String fileName = "";
 	private String filePath = "";
 	private String fileDirectory = "";
 	private String[] albumInfo;
 	private Object[][] trackInfo;
 	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
-	private boolean isCue;
-	private boolean isGoogleCover = false;
-	private boolean isID3Cover = false;
 	private boolean hasSomethingChanged = false;
-	private boolean hasCover = false;
 	private boolean isCoverSpecific = false;
 	private Properties properties;
 	private String saveCoverName = "cover";
 	private int languageNumber = 0;
+	private final int IS_NO_FILE = 0;
+	private final int IS_CUE = 1;
+	private final int IS_ID3 = 2;
+	private final int IS_GOOGLE = 1;
 	private final String[][] languagePack = {
 			{"Some changes haven't saved yet, are you sure to close?","Load File","Load Error","Write File","You have done something changes, are you sure to save them?","Write successful!","Write Error!","Last","Next","Save Cover","Save completed",
 				"Read ID3 Cover","Album:","Album Artist:","Source File:","Connect File","Album Generate:","Album Year:","Info","Play","Reload",
@@ -167,7 +170,7 @@ public class CueSheetGUI extends JFrame {
 		addWindowListener(new WindowAdapter(){
 			@Override
 			public void windowClosing(WindowEvent e){
-				if(hasSomethingChanged){
+				if(hasSomethingChanged && fileType != IS_NO_FILE){
 					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][0]) == JOptionPane.YES_OPTION){
 						System.exit(0);
 					}
@@ -196,7 +199,7 @@ public class CueSheetGUI extends JFrame {
 		controlPad.add(loadButton);
 		loadButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(hasSomethingChanged){
+				if(hasSomethingChanged && fileType != IS_NO_FILE){
 					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][22]) == JOptionPane.YES_OPTION)
 						loadFile();
 				}else{
@@ -210,12 +213,12 @@ public class CueSheetGUI extends JFrame {
 			encodeBox.addItem(s);
 		encodeBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					try {
 						cueInput = new ReadMachine(filePath,(String)encodeBox.getSelectedItem());
-						isCue = true;
-						isGoogleCover = true;
-						isID3Cover =false;
+						fileType = IS_CUE;
+						coverType = IS_GOOGLE;
+						hasCover = false;
 						hasSomethingChanged = true;
 						
 						albumInfo = cueInput.getAlbumInfo();
@@ -250,9 +253,9 @@ public class CueSheetGUI extends JFrame {
 		testButton.setEnabled(false);
 		testButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(hasSomethingChanged){
+				if(hasSomethingChanged && fileType != IS_NO_FILE){
 					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][4]) == JOptionPane.YES_OPTION){
-						if(isCue){
+						if(fileType == IS_CUE){
 							WriteMachine wm = null;
 							try {
 								wm = new WriteMachine(fileDirectory+"/"+fileName,albumInfo,trackInfo,cueInput.getAlbumNotSupport(),cueInput.isMultiFileCue());
@@ -263,7 +266,7 @@ public class CueSheetGUI extends JFrame {
 							} finally{
 								wm.close();
 							}
-						}else{
+						}else if(fileType == IS_ID3){
 							try {
 								TagReadMachine.writeTag(trackInfo);
 								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
@@ -331,13 +334,13 @@ public class CueSheetGUI extends JFrame {
 								JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
 							}
 						}
-					}else if(isGoogleCover){
+					}else if(coverType == IS_GOOGLE){
 						try{
 							JOptionPane.showMessageDialog(albumCoverLabel, new ImageIcon(service.getNowAlbumCover(false)),"",JOptionPane.PLAIN_MESSAGE);
 						}catch(Exception ex){
 							JOptionPane.showMessageDialog(albumCoverLabel, new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
 						}
-					}else if(isID3Cover){
+					}else if(coverType == IS_ID3){
 						try{
 							JOptionPane.showMessageDialog(albumCoverLabel, new ImageIcon(tagInput.getNowCover(false)),"",JOptionPane.PLAIN_MESSAGE);
 						}catch(Exception ex){
@@ -357,14 +360,16 @@ public class CueSheetGUI extends JFrame {
 				
 				Thread coverChangeProcess = new Thread(new Runnable(){
 					public void run() {
-						if(isGoogleCover && hasCover){
-							try{
-								albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover(true)));
-							}catch(Exception e){
-								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+						if(hasCover){
+							if(coverType == IS_GOOGLE){
+								try{
+									albumCoverLabel.setIcon(new ImageIcon(service.getLastAlbumCover(true)));
+								}catch(Exception e){
+									albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+								}
+							}else if(coverType == IS_ID3){
+								albumCoverLabel.setIcon(new ImageIcon(tagInput.getLastCover(true)));
 							}
-						}else if(isID3Cover && hasCover){
-							albumCoverLabel.setIcon(new ImageIcon(tagInput.getLastCover(true)));
 						}
 					}
 				});
@@ -378,7 +383,7 @@ public class CueSheetGUI extends JFrame {
 		coverNineButton.setPreferredSize(new Dimension(50, 20));
 		coverNineButton.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if(isGoogleCover && hasCover){
+				if(hasCover && coverType == IS_GOOGLE){
 					coverDialog cd = new coverDialog(languageNumber);
 					try {
 						cd.setNine(service.getFourAlbumCover(),fileDirectory,saveCoverName);
@@ -397,14 +402,16 @@ public class CueSheetGUI extends JFrame {
 				setLoadingGif();
 				Thread coverChangeProcess = new Thread(new Runnable(){
 					public void run(){
-						if(isGoogleCover && hasCover){
-							try{
-								albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
-							}catch(Exception e){
-								albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+						if(hasCover){
+							if(coverType == IS_GOOGLE){
+								try{
+									albumCoverLabel.setIcon(new ImageIcon(service.getNextAlbumCover(true)));
+								}catch(Exception e){
+									albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
+								}
+							}else if(coverType == IS_ID3){
+								albumCoverLabel.setIcon(new ImageIcon(tagInput.getNextCover(true)));
 							}
-						}else if(isID3Cover && hasCover){
-							albumCoverLabel.setIcon(new ImageIcon(tagInput.getNextCover(true)));
 						}
 					}
 				});
@@ -419,21 +426,23 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e){
 				Thread coverSaveProcess = new Thread(new Runnable(){
 					public void run(){
-						if(isGoogleCover && hasCover){
-							try {
-								File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
-								ImageIO.write(service.getNowAlbumCover(false), "png", ouput);
-								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
-							} catch (Exception e) {
-								JOptionPane.showMessageDialog(contentPane, e.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
-							}
-						}else if(isID3Cover && hasCover){
-							try {
-								File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
-								ImageIO.write(tagInput.getNowCover(false), "png", ouput);
-								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
-							} catch (Exception e) {
-								JOptionPane.showMessageDialog(contentPane, e.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
+						if(hasCover){
+							if(coverType == IS_GOOGLE){
+								try {
+									File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
+									ImageIO.write(service.getNowAlbumCover(false), "png", ouput);
+									JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
+								} catch (Exception e) {
+									JOptionPane.showMessageDialog(contentPane, e.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
+								}
+							}else if(coverType == IS_ID3){
+								try {
+									File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
+									ImageIO.write(tagInput.getNowCover(false), "png", ouput);
+									JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
+								} catch (Exception e) {
+									JOptionPane.showMessageDialog(contentPane, e.getMessage(), languagePack[languageNumber][6], JOptionPane.ERROR_MESSAGE);
+								}
 							}
 						}
 					}
@@ -474,14 +483,16 @@ public class CueSheetGUI extends JFrame {
 		albumTItilePad.add(albumTitleField);
 		albumTitleField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
-				}else if(isCoverSpecific){
-					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
-				}else{
-					for(Object[] oa : trackInfo)
-						oa[TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
-				}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
+					}else{
+						for(Object[] oa : trackInfo)
+							oa[TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
+					}
+				}	
 				albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
@@ -495,29 +506,30 @@ public class CueSheetGUI extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if(isCoverSpecific){
-					if(albumTitleField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE])){
-						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
-					}else{
-						albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
-					}
-				}else if(!isCue){
-					for(Object[] oa :trackInfo){
-						if(!albumTitleField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_TITLE])){
-							albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
-							break;
-						}
-						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
-					}
-				}else if(isCue){
+				if(fileType == IS_CUE){
 					if(albumTitleField.getText().equals(""+albumInfo[ReadMachine.ALBUM_TITLE])){
 						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
 						albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
 					}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						if(albumTitleField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE])){
+							albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
+						}else{
+							albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
+						}
+					}else{
+						for(Object[] oa :trackInfo){
+							if(!albumTitleField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_TITLE])){
+								albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
+								break;
+							}
+						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
+						}
+					}
 				}
 			}
-			
 		});
 		albumTitleField.setColumns(20);
 		
@@ -535,14 +547,16 @@ public class CueSheetGUI extends JFrame {
 		albumPerformerField = new JTextField();
 		albumPerformerField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
-				}else if(isCoverSpecific){
-					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
-				}else{
-					for(Object[] oa : trackInfo)
-						oa[TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
-				}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
+					}else{
+						for(Object[] oa : trackInfo)
+							oa[TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
+					}
+				}	
 				albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
@@ -556,25 +570,27 @@ public class CueSheetGUI extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if(isCoverSpecific){
-					if(albumPerformerField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER])){
-						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
-					}else{
-						albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
-					}
-				}else if(!isCue){
-					for(Object[] oa :trackInfo){
-						if(!albumPerformerField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_PERFORMER])){
-							albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
-							break;
-						}
-						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
-					}
-				}else if(isCue){
+				if(fileType == IS_CUE){
 					if(albumPerformerField.getText().equals(""+albumInfo[ReadMachine.ALBUM_PERFORMER])){
 						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
 						albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						if(albumPerformerField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER])){
+							albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
+						}else{
+							albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+						}
+					}else{
+						for(Object[] oa :trackInfo){
+							if(!albumPerformerField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_PERFORMER])){
+								albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+								break;
+							}
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
+						}
 					}
 				}
 			}
@@ -602,7 +618,7 @@ public class CueSheetGUI extends JFrame {
 		albumFileButton = new JButton(languagePack[languageNumber][15]);
 		albumFileButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					File[] selectedFiles = null;
 					
 					FileDialog fileChooser = new FileDialog(new Frame(),languagePack[languageNumber][1],FileDialog.LOAD);
@@ -621,32 +637,34 @@ public class CueSheetGUI extends JFrame {
 						hasSomethingChanged = true;
 						testButton.setEnabled(true);
 					}
-				}else if(isID3Cover && !isCoverSpecific){
-					albumFileButton.setEnabled(false);
-					isID3Cover = false;
-					isGoogleCover = true;
-					setLoadingGif();
-					Thread coverProcess = new Thread(new Runnable(){
-						public void run(){
-							loadCover();
-							albumFileButton.setEnabled(true);
-							albumFileButton.setText(languagePack[languageNumber][11]);
-						}
-					});
-					coverProcess.start();
-				}else if(isGoogleCover){
-					albumFileButton.setEnabled(false);
-					isGoogleCover = false;
-					isID3Cover = true;
-					setLoadingGif();
-					Thread coverProcess = new Thread(new Runnable(){
-						public void run(){
-							loadCover();
-							albumFileButton.setEnabled(true);
-							albumFileButton.setText("Google Search");
-						}
-					});
-					coverProcess.start();
+				}else if(fileType == IS_ID3 && !isCoverSpecific){
+					if(coverType == IS_ID3){
+						albumFileButton.setEnabled(false);
+						coverType = IS_GOOGLE;
+						hasCover = false;
+						setLoadingGif();
+						Thread coverProcess = new Thread(new Runnable(){
+							public void run(){
+								loadCover();
+								albumFileButton.setEnabled(true);
+								albumFileButton.setText(languagePack[languageNumber][11]);
+							}
+						});
+						coverProcess.start();
+					}else if(coverType == IS_GOOGLE){
+						albumFileButton.setEnabled(false);
+						coverType = IS_ID3;
+						hasCover = false;
+						setLoadingGif();
+						Thread coverProcess = new Thread(new Runnable(){
+							public void run(){
+								loadCover();
+								albumFileButton.setEnabled(true);
+								albumFileButton.setText("Google Search");
+							}
+						});
+						coverProcess.start();
+					}
 				}
 			}
 		});
@@ -663,14 +681,16 @@ public class CueSheetGUI extends JFrame {
 		albumGenerateField = new JTextField();
 		albumGenerateField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
-				}else if(isCoverSpecific){
-					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
-				}else{
-					for(Object[] oa : trackInfo)
-						oa[TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
-				}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
+					}else{
+						for(Object[] oa : trackInfo)
+							oa[TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
+					}
+				}	
 				albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
@@ -684,25 +704,27 @@ public class CueSheetGUI extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if(isCoverSpecific){
-					if(albumGenerateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE])){
-						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
-					}else{
-						albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
-					}
-				}else if(!isCue){
-					for(Object[] oa :trackInfo){
-						if(!albumGenerateField.getText().equals(""+oa[TagReadMachine.TRACK_GENRE])){
-							albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
-							break;
-						}
-						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
-					}
-				}else if(isCue){
+				if(fileType == IS_CUE){
 					if(albumGenerateField.getText().equals(""+albumInfo[ReadMachine.ALBUM_GENRE])){
 						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
 						albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						if(albumGenerateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE])){
+							albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
+						}else{
+							albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+						}
+					}else{
+						for(Object[] oa :trackInfo){
+							if(!albumGenerateField.getText().equals(""+oa[TagReadMachine.TRACK_GENRE])){
+								albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+								break;
+							}
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
+						}
 					}
 				}
 			}
@@ -715,20 +737,26 @@ public class CueSheetGUI extends JFrame {
 		albumGenerateFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
 		albumGenerateAndDatePad.add(albumGenerateFocusLabel);
 		
+		JPanel albumDatePad = new JPanel();
+		FlowLayout flowLayout_7 = (FlowLayout) albumDatePad.getLayout();
+		flowLayout_7.setAlignment(FlowLayout.LEFT);
+		
 		albumDateLabel = new JLabel(languagePack[languageNumber][17]);
-		albumGenerateAndDatePad.add(albumDateLabel);
+		albumDatePad.add(albumDateLabel);
 		
 		albumDateField = new JTextField();
 		albumDateField.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
-				}else if(isCoverSpecific){
-					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE] = albumDateField.getText();
-				}else{
-					for(Object[] oa : trackInfo)
-						oa[TagReadMachine.TRACK_DATE] = albumDateField.getText();
-				}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE] = albumDateField.getText();
+					}else{
+						for(Object[] oa : trackInfo)
+							oa[TagReadMachine.TRACK_DATE] = albumDateField.getText();
+					}
+				}	
 				albumDateFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
@@ -742,36 +770,38 @@ public class CueSheetGUI extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if(isCoverSpecific){
-					if(albumDateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE])){
-						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
-					}else{
-						albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
-					}
-				}else if(!isCue){
-					for(Object[] oa :trackInfo){
-						if(!albumDateField.getText().equals(""+oa[TagReadMachine.TRACK_DATE])){
-							albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
-							break;
-						}
-						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
-					}
-				}else if(isCue){
+				if(fileType == IS_CUE){
 					if(albumDateField.getText().equals(""+albumInfo[ReadMachine.ALBUM_DATE])){
 						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
 						albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						if(albumDateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE])){
+							albumDateFocusLabel.setText(languagePack[languageNumber][29]);
+						}else{
+							albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+						}
+					}else{
+						for(Object[] oa :trackInfo){
+							if(!albumDateField.getText().equals(""+oa[TagReadMachine.TRACK_DATE])){
+								albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+								break;
+							}
+						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
+						}
 					}
 				}
 			}
 			
 		});
 		albumDateField.setColumns(5);
-		albumGenerateAndDatePad.add(albumDateField);
+		albumDatePad.add(albumDateField);
 		
 		albumDateFocusLabel = new JLabel();
 		albumDateFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
-		albumGenerateAndDatePad.add(albumDateFocusLabel);
+		albumDatePad.add(albumDateFocusLabel);
 		
 		
 		albumCommentPad = new JPanel();
@@ -784,14 +814,16 @@ public class CueSheetGUI extends JFrame {
 		albumCommentField = new JTextField();
 		albumCommentField.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if(isCue){
+				if(fileType == IS_CUE){
 					albumInfo[ReadMachine.ALBUM_COMMENT] = albumCommentField.getText();
-				}else if(isCoverSpecific){
-					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
-				}else{
-					for(Object[] oa: trackInfo)
-						oa[TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
-				}
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
+					}else{
+						for(Object[] oa : trackInfo)
+							oa[TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
+					}
+				}	
 				albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
@@ -805,25 +837,27 @@ public class CueSheetGUI extends JFrame {
 
 			@Override
 			public void focusLost(FocusEvent e) {
-				if(isCoverSpecific){
-					if(albumCommentField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT])){
+				if(fileType == IS_CUE){
+					if(albumCommentField.getText().equals(""+albumInfo[ReadMachine.ALBUM_COMMENT])){
 						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
 						albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
 					}
-				}else if(!isCue){
-					for(Object[] oa :trackInfo){
-						if(!albumCommentField.getText().equals(""+oa[TagReadMachine.TRACK_COMMENT])){
+				}else if(fileType == IS_ID3){
+					if(isCoverSpecific){
+						if(albumCommentField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT])){
+							albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
+						}else{
 							albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
-							break;
 						}
-						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
-					}
-				}else if(isCue){
-					if(albumCommentField.getText().equals(""+albumInfo[ReadMachine.ALBUM_DATE])){
-						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
 					}else{
-						albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
+						for(Object[] oa :trackInfo){
+							if(!albumCommentField.getText().equals(""+oa[TagReadMachine.TRACK_COMMENT])){
+								albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
+								break;
+							}
+						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
+						}
 					}
 				}
 			}
@@ -841,6 +875,7 @@ public class CueSheetGUI extends JFrame {
 		albumInfoArea.add(albumPerformerPad);
 		albumInfoArea.add(albumFilePad);
 		albumInfoArea.add(albumGenerateAndDatePad);
+		albumInfoArea.add(albumDatePad);
 		albumInfoArea.add(albumCommentPad);
 		albumInfoArea.add(Box.createGlue());
 		
@@ -851,7 +886,7 @@ public class CueSheetGUI extends JFrame {
 			public void mousePressed(MouseEvent e){
 				if(SwingUtilities.isLeftMouseButton(e) || trackTable.getSelectedRows().length != 0){
 					trackTable.getSelectionModel().clearSelection();
-					if(isCoverSpecific){
+					if(fileType == IS_ID3 && isCoverSpecific){
 						setAlbumField();
 						setLoadingGif();
 						Thread coverProcess = new Thread(new Runnable(){
@@ -871,7 +906,7 @@ public class CueSheetGUI extends JFrame {
 			@Override
 			public void mousePressed(MouseEvent e) {
 				if(SwingUtilities.isLeftMouseButton(e)){
-					if(!isCue && e.getClickCount() == 1 ){
+					if(e.getClickCount() == 1 && fileType == IS_ID3){
 						if(trackTable.getSelectedRows().length == 1){
 							int selectedRow = trackTable.getSelectedRows()[0];
 							isCoverSpecific = true;
@@ -901,14 +936,14 @@ public class CueSheetGUI extends JFrame {
 						int[] rowNumbers = {trackTable.rowAtPoint(e.getPoint())};
 						trackTable.setRowSelectionInterval(rowNumbers[0], rowNumbers[rowNumbers.length-1]);
 						
-						if(isCue){
+						if(fileType == IS_CUE){
 							TrackInfoDialog td = new TrackInfoDialog(rowNumbers,albumInfo,trackInfo,languageNumber);
 							if(td.hasChanged()){
 								hasSomethingChanged = true;
 								testButton.setEnabled(true);
 								setAlbumField();
 							}
-						}else{
+						}else if(fileType == IS_ID3){
 							TagTrackInfoDialog ttd = new TagTrackInfoDialog(rowNumbers,trackInfo,languageNumber);
 							if(ttd.hasChanged()){
 								hasSomethingChanged = true;
@@ -950,9 +985,9 @@ public class CueSheetGUI extends JFrame {
 			if(selectedFiles[0].getName().split("\\.")[selectedFiles[0].getName().split("\\.").length-1].equalsIgnoreCase("cue")){
 				try {
 					cueInput = new ReadMachine(selectedFiles[0].getAbsolutePath(),(String)encodeBox.getSelectedItem());
-					isCue = true;
-					isGoogleCover = true;
-					isID3Cover =false;
+					fileType = IS_CUE;
+					coverType = IS_GOOGLE;
+					hasCover = false;
 					hasSomethingChanged = false;
 					
 					albumInfo = cueInput.getAlbumInfo();
@@ -985,9 +1020,9 @@ public class CueSheetGUI extends JFrame {
 				try {
 					tagInput = new TagReadMachine(paths);
 					
-					isCue = false;
-					isID3Cover = true;
-					isGoogleCover = false;
+					fileType = IS_ID3;
+					coverType = IS_ID3;
+					hasCover = false;
 					hasSomethingChanged = false;
 					
 					trackInfo = tagInput.getTrack();
@@ -1089,7 +1124,7 @@ public class CueSheetGUI extends JFrame {
 	
 	private void loadCover(){
 		hasCover = false;
-		if(isGoogleCover){
+		if(coverType == IS_GOOGLE){
 			hasCover= service.hasCover(albumInfo[ReadMachine.ALBUM_PERFORMER]+albumInfo[ReadMachine.ALBUM_TITLE]);
 			if(hasCover){
 				try{
@@ -1100,7 +1135,7 @@ public class CueSheetGUI extends JFrame {
 			}else{
 				albumCoverLabel.setIcon(new ImageIcon(CueSheetGUI.class.getResource("/fail.png")));
 			}
-		}else if(isID3Cover){
+		}else if(coverType == IS_ID3){
 			hasCover = tagInput.setCoverArray();
 			if(hasCover){
 				albumCoverLabel.setIcon(new ImageIcon(tagInput.getNowCover(true)));
@@ -1115,14 +1150,14 @@ public class CueSheetGUI extends JFrame {
 		JMenuItem menuInfo = new JMenuItem(languagePack[languageNumber][18]);
 		menuInfo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
-				if(isCue){
+				if(fileType == IS_CUE){
 					TrackInfoDialog td = new TrackInfoDialog(rowNumbers,albumInfo,trackInfo,languageNumber);
 					if(td.hasChanged()){
 						hasSomethingChanged = true;
 						testButton.setEnabled(true);
 						setAlbumField();
 					}
-				}else{
+				}else if (fileType == IS_ID3){
 					TagTrackInfoDialog ttd = new TagTrackInfoDialog(rowNumbers,trackInfo,languageNumber);
 					if(ttd.hasChanged()){
 						hasSomethingChanged = true;
@@ -1136,10 +1171,10 @@ public class CueSheetGUI extends JFrame {
 		JMenuItem menuPlay = new JMenuItem(languagePack[languageNumber][19]);
 		menuPlay.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e){
-				if(isCue){
+				if(fileType == IS_CUE){
 					String location = ""+(Integer.parseInt(""+trackInfo[rowNumbers[0]][ReadMachine.TRACK_MINUTEINDEX]) * 60 + Integer.parseInt(""+trackInfo[rowNumbers[0]][ReadMachine.TRACK_SECONDINDEX]));
 					ServiceMachine.playWithAppleScript(fileDirectory+"/"+albumInfo[ReadMachine.ALBUM_FILE], location);
-				}else{
+				}else if(fileType == IS_ID3){
 					ServiceMachine.playWithAppleScript(""+trackInfo[rowNumbers[0]][TagReadMachine.FILE_PATH], "0");
 				}
 			}
@@ -1207,12 +1242,14 @@ public class CueSheetGUI extends JFrame {
 		albumTitleLabel.setText(languagePack[languageNumber][12]);
 		albumPefromerLabel.setText(languagePack[languageNumber][13]);
 		albumFileLabel.setText(languagePack[languageNumber][14]);
-		if(isCue){
+		if(fileType == IS_CUE){
 			albumFileButton.setText(languagePack[languageNumber][15]);
-		}else if(isGoogleCover){
-			albumFileButton.setText(languagePack[languageNumber][11]);
-		}else if(isID3Cover){
-			albumFileButton.setText("Google Search");
+		}else if(fileType == IS_ID3){
+			if(coverType == IS_GOOGLE){
+				albumFileButton.setText(languagePack[languageNumber][11]);
+			}else if(coverType == IS_ID3){
+				albumFileButton.setText("Google Search");
+			}
 		}
 		albumGenerateLabel.setText(languagePack[languageNumber][16]);
 		albumDateLabel.setText(languagePack[languageNumber][17]);
