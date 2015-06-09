@@ -29,17 +29,23 @@ public class TrackInfoDialog extends JDialog {
 	private boolean isAlbumTitleChanged = false;
 	private JTextField albumPerformerField;
 	private boolean isAlbumPerformerChanged = false;
+	private JTextField trackComposerField;
+	private boolean isTrackComposerChanged = false;
+	private JTextField albumComposerField;
+	private boolean isAlbumComposerChanged = false;
 	private JTextField albumGenerateField;
 	private boolean isAlbumGenerateChanged = false;
 	private JTextField albumDateField;
 	private boolean isAlbumDateChanged = false;
+	private JTextField albumCommentField;
+	private boolean isAlbumCommentChanged = false;
 	private int[] rowsNumber;
 	private String[] albumInfo;
 	private Object[][] trackInfo;
 	private int languageNumber = 0;
 	private final String[][] languagePack = {
-			{"Title:","Artist:","Album:","Album Artist:","Album Generate:","Album Year:","Info"},
-			{"歌曲名稱:","歌曲演出者:","專輯名稱:","專輯演出者:","專輯類型:","專輯年份:","簡介"}
+			{"Title:","Artist:","Album:","Album Artist:","Album Generate:","Album Year:","Info","Album Comment:","Composer:","Album Composer:"},
+			{"歌曲名稱:","歌曲演出者:","專輯名稱:","專輯演出者:","專輯類型:","專輯年份:","簡介","專輯註解:","作曲者:","專輯作曲者:"}
 	};
 
 	
@@ -48,6 +54,7 @@ public class TrackInfoDialog extends JDialog {
 	 * Create the dialog.
 	 */
 	public TrackInfoDialog(int[] rowsNumber, String[] albumInfo,Object[][] trackInfo,int languageNumber) {
+		setResizable(false);
 		this.rowsNumber = rowsNumber;
 		this.albumInfo = albumInfo;
 		this.trackInfo = trackInfo;
@@ -59,7 +66,7 @@ public class TrackInfoDialog extends JDialog {
 
 	private void go(){
 		setTitle(languagePack[languageNumber][6]);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 500, 400);
 		getContentPane().setLayout(new BorderLayout());
 		infoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(infoPanel, BorderLayout.CENTER);
@@ -160,6 +167,47 @@ public class TrackInfoDialog extends JDialog {
 			}
 		});
 		
+		JPanel composerPad = new JPanel();
+		infoPanel.add(composerPad);
+		
+		JLabel trackComposerLabel = new JLabel(languagePack[languageNumber][8]);
+		composerPad.add(trackComposerLabel);
+		
+		trackComposerField = new JTextField();
+		trackComposerField.setColumns(10);
+		composerPad.add(trackComposerField);
+		trackComposerField.setText(""+showSomething(ReadMachine.TRACK_COMPOSER,false));
+		trackComposerField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+		});
+		
+		JLabel albumComposerLabel = new JLabel(languagePack[languageNumber][9]);
+		composerPad.add(albumComposerLabel);
+		
+		albumComposerField = new JTextField();
+		albumComposerField.setColumns(10);
+		composerPad.add(albumComposerField);
+		albumComposerField.setText(""+showSomething(ReadMachine.ALBUM_COMPOSER,true));
+		albumComposerField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isAlbumComposerChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isAlbumComposerChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isAlbumComposerChanged = true;
+			}
+		});
+		
 		
 		JPanel albumOtherPad = new JPanel();
 		infoPanel.add(albumOtherPad);
@@ -203,6 +251,29 @@ public class TrackInfoDialog extends JDialog {
 		});
 		
 		
+		JPanel albumCommentPad = new JPanel();
+		infoPanel.add(albumCommentPad);
+		
+		JLabel albumCommentLabel = new JLabel(languagePack[languageNumber][7]);
+		albumCommentPad.add(albumCommentLabel);
+		
+		albumCommentField = new JTextField();
+		albumCommentPad.add(albumCommentField);
+		albumCommentField.setColumns(20);
+		albumCommentField.setText(""+showSomething(ReadMachine.ALBUM_COMMENT,true));
+		albumCommentField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isAlbumCommentChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isAlbumCommentChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isAlbumCommentChanged = true;
+			}
+		});
+		
+		
 		JPanel buttonPane = new JPanel();
 		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		getContentPane().add(buttonPane, BorderLayout.SOUTH);
@@ -214,6 +285,8 @@ public class TrackInfoDialog extends JDialog {
 				albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
 				albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
 				albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
+				albumInfo[ReadMachine.ALBUM_COMMENT] = albumCommentField.getText();
+				albumInfo[ReadMachine.ALBUM_COMPOSER] = albumComposerField.getText();
 				if(isTrackTitleChanged){
 					for(int i : rowsNumber)
 						trackInfo[i][ReadMachine.TRACK_TITLE] = trackTitleField.getText();
@@ -221,6 +294,10 @@ public class TrackInfoDialog extends JDialog {
 				if(isTrackPerformerChanged){
 					for(int i : rowsNumber)
 						trackInfo[i][ReadMachine.TRACK_PERFORMER] = trackPerformerField.getText();
+				}
+				if(isTrackComposerChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][ReadMachine.TRACK_COMPOSER] = trackComposerField.getText();
 				}
 				setVisible(false);
 				dispose();
@@ -264,7 +341,8 @@ public class TrackInfoDialog extends JDialog {
 	public boolean hasChanged(){
 		boolean result = false;
 		
-		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isAlbumGenerateChanged || isAlbumDateChanged)
+		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isAlbumGenerateChanged || isAlbumDateChanged 
+				|| isAlbumCommentChanged || isTrackComposerChanged || isAlbumComposerChanged)
 			result = true;
 		return result;
 	}

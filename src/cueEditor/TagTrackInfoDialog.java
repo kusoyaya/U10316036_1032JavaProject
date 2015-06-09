@@ -34,21 +34,22 @@ public class TagTrackInfoDialog extends JDialog {
 	private boolean isTrackOrderChanged = false;
 	private JTextField trackTotalField;
 	private boolean isTrackTotalChanged = false;
+	private JTextField trackCommentField;
+	private boolean isTrackCommentChanged = false;
+	private JTextField trackComposerField;
+	private boolean isTrackComposerChanged = false;
 	private int[] rowsNumber;
 	private Object[][] trackInfo;
 	private int languageNumber = 0;
 	private final String[][] languagePack = {
-			{"Title:","Artist:","Album:","Album Artist:","Generate:","Year:","No.","Info"},
-			{"歌曲名稱:","歌曲演出者:","專輯名稱:","專輯演出者:","類型:","年份:","音軌","簡介"}
+			{"Title:","Artist:","Album:","Album Artist:","Generate:","Year:","No.","Info","Comment:","Composer:"},
+			{"歌曲名稱:","歌曲演出者:","專輯名稱:","專輯演出者:","類型:","年份:","音軌","簡介","註解:","作曲者:"}
 	};
 	
-
 	
 
-	/**
-	 * Create the dialog.
-	 */
 	public TagTrackInfoDialog(int[] rowsNumber, Object[][] trackInfo, int languageNumber) {
+		setResizable(false);
 		this.rowsNumber = rowsNumber;
 		this.trackInfo = trackInfo;
 		this.languageNumber = languageNumber;
@@ -59,7 +60,7 @@ public class TagTrackInfoDialog extends JDialog {
 
 	private void go(){
 		setTitle(languagePack[languageNumber][7]);
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 500, 400);
 		getContentPane().setLayout(new BorderLayout());
 		infoPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(infoPanel, BorderLayout.CENTER);
@@ -160,17 +161,39 @@ public class TagTrackInfoDialog extends JDialog {
 			}
 		});
 		
+
 		
-		JPanel albumOtherPad = new JPanel();
-		FlowLayout flowLayout = (FlowLayout) albumOtherPad.getLayout();
-		infoPanel.add(albumOtherPad);
+		JPanel trackComposerPad = new JPanel();
+		infoPanel.add(trackComposerPad);
+		
+		JLabel trackComposerLabel = new JLabel(languagePack[languageNumber][9]);
+		trackComposerPad.add(trackComposerLabel);
+		
+		trackComposerField = new JTextField();
+		trackComposerField.setColumns(20);
+		trackComposerPad.add(trackComposerField);
+		trackComposerField.setText(""+showSomething(TagReadMachine.TRACK_COMPOSER));
+		trackComposerField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isTrackComposerChanged = true;
+			}
+		});
+		
+		JPanel trackGenerateDatePad = new JPanel();
+		infoPanel.add(trackGenerateDatePad);
 		
 		JLabel trackGenerateLabel = new JLabel(languagePack[languageNumber][4]);
-		albumOtherPad.add(trackGenerateLabel);
+		trackGenerateDatePad.add(trackGenerateLabel);
 		
 		trackGenerateField = new JTextField();
-		trackGenerateField.setColumns(9);
-		albumOtherPad.add(trackGenerateField);
+		trackGenerateField.setColumns(10);
+		trackGenerateDatePad.add(trackGenerateField);
 		trackGenerateField.setText(""+showSomething(TagReadMachine.TRACK_GENRE));
 		trackGenerateField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
@@ -185,11 +208,11 @@ public class TagTrackInfoDialog extends JDialog {
 		});
 		
 		JLabel trackDateLabel = new JLabel(languagePack[languageNumber][5]);
-		albumOtherPad.add(trackDateLabel);
+		trackGenerateDatePad.add(trackDateLabel);
 		
 		trackDateField = new JTextField();
 		trackDateField.setColumns(5);
-		albumOtherPad.add(trackDateField);
+		trackGenerateDatePad.add(trackDateField);
 		trackDateField.setText(""+showSomething(TagReadMachine.TRACK_DATE));
 		trackDateField.getDocument().addDocumentListener(new DocumentListener(){
 			public void changedUpdate(DocumentEvent e) {
@@ -203,11 +226,33 @@ public class TagTrackInfoDialog extends JDialog {
 			}
 		});
 		
+		JPanel trackCommentPad = new JPanel();
+		infoPanel.add(trackCommentPad);
+		
+		JLabel trackCommentLabel = new JLabel(languagePack[languageNumber][8]);
+		trackCommentPad.add(trackCommentLabel);
+		
+		trackCommentField = new JTextField();
+		trackCommentPad.add(trackCommentField);
+		trackCommentField.setColumns(15);
+		trackCommentField.setText(""+showSomething(TagReadMachine.TRACK_COMMENT));
+		trackCommentField.getDocument().addDocumentListener(new DocumentListener(){
+			public void changedUpdate(DocumentEvent e) {
+				isTrackCommentChanged = true;
+			}
+			public void removeUpdate(DocumentEvent e) {
+				isTrackCommentChanged = true;
+			}
+			public void insertUpdate(DocumentEvent e) {
+				isTrackCommentChanged = true;
+			}
+		});
+		
 		JLabel trackOrderLabel = new JLabel(languagePack[languageNumber][6]);
-		albumOtherPad.add(trackOrderLabel);
+		trackCommentPad.add(trackOrderLabel);
 		
 		trackOrderField = new JTextField();
-		albumOtherPad.add(trackOrderField);
+		trackCommentPad.add(trackOrderField);
 		trackOrderField.setColumns(3);
 		trackOrderField.setText(""+showSomething(TagReadMachine.TRACK_ORDER));
 		trackOrderField.getDocument().addDocumentListener(new DocumentListener(){
@@ -223,10 +268,10 @@ public class TagTrackInfoDialog extends JDialog {
 		});
 		
 		JLabel trackTotalLabel = new JLabel("/");
-		albumOtherPad.add(trackTotalLabel);
+		trackCommentPad.add(trackTotalLabel);
 		
 		trackTotalField = new JTextField();
-		albumOtherPad.add(trackTotalField);
+		trackCommentPad.add(trackTotalField);
 		trackTotalField.setColumns(3);
 		trackTotalField.setText(""+showSomething(TagReadMachine.TRACK_TOTAL));
 		trackTotalField.getDocument().addDocumentListener(new DocumentListener(){
@@ -240,6 +285,7 @@ public class TagTrackInfoDialog extends JDialog {
 				isTrackTotalChanged = true;
 			}
 		});
+		
 		
 		
 		JPanel buttonPane = new JPanel();
@@ -281,6 +327,14 @@ public class TagTrackInfoDialog extends JDialog {
 					for(int i : rowsNumber)
 						trackInfo[i][TagReadMachine.TRACK_TOTAL] = trackTotalField.getText();
 				}
+				if(isTrackCommentChanged){
+					for(int i : rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_COMMENT] = trackCommentField.getText();
+				}
+				if(isTrackComposerChanged){
+					for(int i :rowsNumber)
+						trackInfo[i][TagReadMachine.TRACK_COMPOSER] = trackComposerField.getText();
+				}
 				
 				setVisible(false);
 				dispose();
@@ -319,7 +373,8 @@ public class TagTrackInfoDialog extends JDialog {
 	public boolean hasChanged(){
 		boolean result = false;
 		
-		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isTrackGenerateChanged || isTrackDateChanged || isTrackOrderChanged || isTrackTotalChanged )
+		if(isTrackTitleChanged || isTrackPerformerChanged || isAlbumTitleChanged || isAlbumPerformerChanged || isTrackGenerateChanged 
+				|| isTrackDateChanged || isTrackOrderChanged || isTrackTotalChanged || isTrackCommentChanged || isTrackComposerChanged)
 			result = true;
 		
 		return result;

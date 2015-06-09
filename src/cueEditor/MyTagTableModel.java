@@ -40,9 +40,7 @@ public class MyTagTableModel extends MyTableModel{
 	
 	@Override
 	public boolean isCellEditable(int row, int col){
-		if(col == 5 || col == 6 || col == 7)
-			return false;
-		return true;
+		return false;
 	}
 	
 	@Override
@@ -53,6 +51,5 @@ public class MyTagTableModel extends MyTableModel{
 	@Override
 	public void setValueAt(Object value, int rowIndex,int columnIndex){
 		data[rowIndex][columnIndex] = value;
-		changed = true;
 	}
 }

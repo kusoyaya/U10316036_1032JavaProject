@@ -2,6 +2,7 @@ package cueEditor;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 
 import javax.imageio.ImageIO;
@@ -13,6 +14,7 @@ import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
+import org.jaudiotagger.tag.images.ArtworkFactory;
 
 public class TagReadMachine {
 	public static final int TRACK_ORDER = 0;
@@ -58,6 +60,15 @@ public class TagReadMachine {
 			System.out.println(System.currentTimeMillis());
 			JOptionPane.showMessageDialog(null, new ImageIcon(coverImage));
 			System.out.println(System.currentTimeMillis());
+			//coverImage = ImageIO.read(TagReadMachine.class.getResourceAsStream("/icon.png"));
+			//ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			//ImageIO.write(coverImage, "png", baos);
+			//baos.flush();
+			//cover.setBinaryData(baos.toByteArray());
+			//baos.close();
+			cover = ArtworkFactory.createArtworkFromFile(new File("/Users/nasirho/Desktop/icon.png"));
+			tag.setField(cover);
+			f.commit();
 		} catch (Exception e){
 			e.printStackTrace();
 		}
@@ -136,7 +147,8 @@ public class TagReadMachine {
 		return track;
 	}
 	
-	public void setCoverArray(){
+	public boolean setCoverArray(){
+		boolean hasCover = false;
 		coverArray = new BufferedImage[filePath.length];
 		
 		for(int i = 0; i < filePath.length; i++){
@@ -146,16 +158,20 @@ public class TagReadMachine {
 				Tag tag = f.getTag();
 				Artwork cover = tag.getFirstArtwork();
 				coverArray[i] = ImageIO.read(new ByteArrayInputStream(cover.getBinaryData()));
+				hasCover = true;
 			}catch(Exception e){
-				
+				hasCover = false;
 			}
 		}
+		return hasCover;
 	}
 	
 	public BufferedImage getNextCover(boolean resizeOrNot){
 		i++;
 		if(i >= coverArray.length)
 			i = coverArray.length - 1;
+		if(i < 0)
+			i = 0;
 		
 		BufferedImage image = coverArray[i];
 		
@@ -166,7 +182,21 @@ public class TagReadMachine {
 	}
 	
 	public BufferedImage getNowCover(boolean resizeOrNot){
+		if(i >= coverArray.length)
+			i = coverArray.length - 1;
+		if(i < 0)
+			i = 0;
+		
 		BufferedImage image = coverArray[i];
+		
+		if(resizeOrNot)
+			image = ServiceMachine.resizeTo300(image);
+		
+		return image;
+	}
+	
+	public BufferedImage getSpecificCover(boolean resizeOrNot , int number){
+		BufferedImage image = coverArray[number];
 		
 		if(resizeOrNot)
 			image = ServiceMachine.resizeTo300(image);
@@ -204,6 +234,14 @@ public class TagReadMachine {
 			tag.setField(FieldKey.COMMENT,""+oa[TRACK_COMMENT]);
 			f.commit();	
 		}
+	}
+	
+	public static void writeCover(String filePath, String imagePath) throws Exception{
+		File src = new File(filePath);
+		AudioFile f = AudioFileIO.read(src);
+		Tag tag = f.getTag();
+		tag.setField(ArtworkFactory.createArtworkFromFile(new File(imagePath)));
+		f.commit();
 	}
 	
 }

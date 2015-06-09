@@ -49,9 +49,7 @@ public class MyTableModel extends AbstractTableModel{
 	
 	@Override
 	public boolean isCellEditable(int row, int col){
-		if(col == 0)
-			return false;
-		return true;
+		return false;
 	}
 	
 	@Override
@@ -61,23 +59,8 @@ public class MyTableModel extends AbstractTableModel{
 	
 	@Override
 	public void setValueAt(Object value, int rowIndex,int columnIndex){
-		if(columnIndex ==6 && (int)value >= 75){
-			data[rowIndex][columnIndex] = (int)value % 75;
-			data[rowIndex][columnIndex-1] = (int)data[rowIndex][columnIndex-1] + (int)value / 75;
-			if((int)data[rowIndex][columnIndex-1] >= 60){
-				data[rowIndex][columnIndex -1] = (int)data[rowIndex][columnIndex-1] % 60;
-				data[rowIndex][columnIndex -2] = (int)data[rowIndex][columnIndex-2]+(int)data[rowIndex][columnIndex-1] / 60;
-			}
-		}else if(columnIndex ==5 && (int)value >= 60){
-			data[rowIndex][columnIndex] = (int)value % 60;
-			data[rowIndex][columnIndex -1] = (int)data[rowIndex][columnIndex-1]+(int)value / 60;
-		}else{
-			data[rowIndex][columnIndex] = value;
-		}
-		changed =true;
+		data[rowIndex][columnIndex] = value;
+		
 	}
 	
-	public boolean hasChanged(){
-		return changed;
-	}
 }

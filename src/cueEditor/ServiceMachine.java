@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -100,6 +101,21 @@ public class ServiceMachine {
         	image = resizeTo300(image);
         
         return image;
+	}
+	
+	public BufferedImage[] getFourAlbumCover() throws IOException {
+		BufferedImage[] imageArray = new BufferedImage[4];
+		int tmp = i;
+		i = -1;
+		for(int j = 0; j < 4 ; j++){
+			try {
+				imageArray[j] = getNextAlbumCover(false);
+			} catch (Exception e) {
+				imageArray[j] = ImageIO.read(ServiceMachine.class.getResourceAsStream("/fail.png"));
+			}
+		}
+		i = tmp;
+		return imageArray;
 	}
 	
 	public static BufferedImage resizeTo300(BufferedImage oImage){
