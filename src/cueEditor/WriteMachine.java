@@ -26,9 +26,6 @@ public class WriteMachine {
 		
 		pWriter = new PrintWriter(file,"UTF-8");
 		
-		System.out.println(Arrays.toString(albumInfo));
-		System.out.println(albumNotSupported.toString());
-		
 		if(isMultiFileCue){
 			writeMultiFileCueAlbum();
 			writeMultiFileCueTrack();
@@ -45,11 +42,14 @@ public class WriteMachine {
 		int result = 0;
 		switch(s){
 		case"wav":
+		case"WAV":
 			result = 0;
 			break;
 		case"mp3":
+		case"MP3":
 			result = 1;
 		case"aiff":
+		case"AIFF":
 			result = 2;
 		default:
 			result = 0;
@@ -58,13 +58,17 @@ public class WriteMachine {
 	}
 	
 	private void writeAlbum(){
-		pWriter.println("REM GENRE \""+album[ReadMachine.ALBUM_GENRE]+"\"");
-		pWriter.println("REM DATE \""+album[ReadMachine.ALBUM_DATE]+"\"");
-		pWriter.println("REM COMMENT \""+album[ReadMachine.ALBUM_COMMENT]+"\"");
+		if(!album[ReadMachine.ALBUM_GENRE].equals(""))
+			pWriter.println("REM GENRE "+album[ReadMachine.ALBUM_GENRE]);
+		if(!album[ReadMachine.ALBUM_DATE].equals(""))
+			pWriter.println("REM DATE "+album[ReadMachine.ALBUM_DATE]);
+		if(!album[ReadMachine.ALBUM_COMMENT].equals(""))
+			pWriter.println("REM COMMENT \""+album[ReadMachine.ALBUM_COMMENT]+"\"");
 		for(String s : albumNotSupported)
 			pWriter.println(s);
 		pWriter.println("PERFORMER \""+album[ReadMachine.ALBUM_PERFORMER]+"\"");
-		pWriter.println("SONGWRITER \""+album[ReadMachine.ALBUM_COMPOSER]+"\"");
+		if(!album[ReadMachine.ALBUM_COMPOSER].equals(""))
+			pWriter.println("SONGWRITER \""+album[ReadMachine.ALBUM_COMPOSER]+"\"");
 		pWriter.println("TITLE \""+album[ReadMachine.ALBUM_TITLE]+"\"");
 		pWriter.println("FILE \""+album[ReadMachine.ALBUM_FILE]+"\" "+forMatArray[checkFormat(album[ReadMachine.ALBUM_FILE])]);
 	}
@@ -74,7 +78,8 @@ public class WriteMachine {
 			pWriter.printf("\tTRACK %02d AUDIO\n",(int)oneTrack[ReadMachine.TRACK_ORDER]);
 			pWriter.printf("\t\tTITLE \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_TITLE]);
 			pWriter.printf("\t\tPERFORMER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_PERFORMER]);
-			pWriter.printf("\t\tSONGWRITER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_COMPOSER]);
+			if(!oneTrack[ReadMachine.TRACK_COMPOSER].equals(""))
+				pWriter.printf("\t\tSONGWRITER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_COMPOSER]);
 			if(!oneTrack[ReadMachine.TRACK_MINUTEPREINDEX].equals(""))
 				pWriter.printf("\t\tINDEX 00 %02d:%02d:%02d\n",(int)oneTrack[ReadMachine.TRACK_MINUTEPREINDEX],(int)oneTrack[ReadMachine.TRACK_SECONDPREINDEX],(int)oneTrack[ReadMachine.TRACK_FRAMEPREINDEX]);
 			pWriter.printf("\t\tINDEX 01 %02d:%02d:%02d\n",(int)oneTrack[ReadMachine.TRACK_MINUTEINDEX],(int)oneTrack[ReadMachine.TRACK_SECONDINDEX],(int)oneTrack[ReadMachine.TRACK_FRAMEINDEX]);
@@ -82,13 +87,17 @@ public class WriteMachine {
 	}
 	
 	private void writeMultiFileCueAlbum(){
-		pWriter.println("REM GENRE \""+album[ReadMachine.ALBUM_GENRE]+"\"");
-		pWriter.println("REM DATE \""+album[ReadMachine.ALBUM_DATE]+"\"");
-		pWriter.println("REM COMMENT \""+album[ReadMachine.ALBUM_COMMENT]+"\"");
+		if(!album[ReadMachine.ALBUM_GENRE].equals(""))
+			pWriter.println("REM GENRE "+album[ReadMachine.ALBUM_GENRE]);
+		if(!album[ReadMachine.ALBUM_DATE].equals(""))
+			pWriter.println("REM DATE "+album[ReadMachine.ALBUM_DATE]);
+		if(!album[ReadMachine.ALBUM_COMMENT].equals(""))
+			pWriter.println("REM COMMENT \""+album[ReadMachine.ALBUM_COMMENT]+"\"");
 		for(String s : albumNotSupported)
 			pWriter.println(s);
 		pWriter.println("PERFORMER \""+album[ReadMachine.ALBUM_PERFORMER]+"\"");
-		pWriter.println("SONGWRITER \""+album[ReadMachine.ALBUM_COMPOSER]+"\"");
+		if(!album[ReadMachine.ALBUM_COMPOSER].equals(""))
+			pWriter.println("SONGWRITER \""+album[ReadMachine.ALBUM_COMPOSER]+"\"");
 		pWriter.println("TITLE \""+album[ReadMachine.ALBUM_TITLE]+"\"");
 	}
 	
@@ -98,7 +107,8 @@ public class WriteMachine {
 			pWriter.printf("\tTRACK %02d AUDIO\n",(int)oneTrack[ReadMachine.TRACK_ORDER]);
 			pWriter.printf("\t\tTITLE \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_TITLE]);
 			pWriter.printf("\t\tPERFORMER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_PERFORMER]);
-			pWriter.printf("\t\tSONGWRITER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_COMPOSER]);
+			if(!oneTrack[ReadMachine.TRACK_COMPOSER].equals(""))
+				pWriter.printf("\t\tSONGWRITER \"%s\"\n",(String)oneTrack[ReadMachine.TRACK_COMPOSER]);
 			if(!oneTrack[ReadMachine.TRACK_MINUTEPREINDEX].equals(""))
 				pWriter.printf("\t\tINDEX 00 %02d:%02d:%02d\n",(int)oneTrack[ReadMachine.TRACK_MINUTEPREINDEX],(int)oneTrack[ReadMachine.TRACK_SECONDPREINDEX],(int)oneTrack[ReadMachine.TRACK_FRAMEPREINDEX]);
 			pWriter.printf("\t\tINDEX 01 %02d:%02d:%02d\n",(int)oneTrack[ReadMachine.TRACK_MINUTEINDEX],(int)oneTrack[ReadMachine.TRACK_SECONDINDEX],(int)oneTrack[ReadMachine.TRACK_FRAMEINDEX]);

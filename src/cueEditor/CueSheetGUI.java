@@ -34,6 +34,8 @@ import com.apple.eawt.AppEvent.PreferencesEvent;
 import com.apple.eawt.Application;
 import com.apple.eawt.PreferencesHandler;
 
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
@@ -66,19 +68,24 @@ public class CueSheetGUI extends JFrame {
 	private JButton coverReloadButton;
 	private JLabel albumTitleLabel;
 	private JTextField albumTitleField;
+	private JLabel albumTitleFocusLabel;
 	private JLabel albumPefromerLabel;
 	private JTextField albumPerformerField;
+	private JLabel albumPerformerFocusLabel;
 	private JLabel albumFileLabel;
 	private JTextField albumFileField;
 	private JButton albumFileButton;
 	private JPanel albumGenerateAndDatePad;
 	private JLabel albumGenerateLabel;
 	private JTextField albumGenerateField;
+	private JLabel albumGenerateFocusLabel;
 	private JLabel albumDateLabel;
 	private JTextField albumDateField;
+	private JLabel albumDateFocusLabel;
 	private JPanel albumCommentPad;
 	private JLabel albumCommentLabel;
 	private JTextField albumCommentField;
+	private JLabel albumCommentFocusLabel;
 	private JScrollPane trackArea;
 	private JTable trackTable;
 	private MyTableModel trackTableModel;
@@ -86,7 +93,6 @@ public class CueSheetGUI extends JFrame {
 	private String fileName = "";
 	private String filePath = "";
 	private String fileDirectory = "";
-	private int fileFormat;
 	private String[] albumInfo;
 	private Object[][] trackInfo;
 	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
@@ -102,10 +108,10 @@ public class CueSheetGUI extends JFrame {
 	private final String[][] languagePack = {
 			{"Some changes haven't saved yet, are you sure to close?","Load File","Load Error","Write File","You have done something changes, are you sure to save them?","Write successful!","Write Error!","Last","Next","Save Cover","Save completed",
 				"Read ID3 Cover","Album:","Album Artist:","Source File:","Connect File","Album Generate:","Album Year:","Info","Play","Reload",
-				"Album Comment:","Some changes haven't saved yet, are you sure to open another file?","Unsupported cue sheet","Generate:","Year:","Comment:","Are you sure to save this cover to audio file?"},
+				"Album Comment:","Some changes haven't saved yet, are you sure to open another file?","Unsupported cue sheet","Generate:","Year:","Comment:","Are you sure to save this cover to audio file?","Press Enter to save","Saved","Unsave yet"},
 			{"你做了一些改動尚未儲存，確定要關閉了嗎？","讀取檔案","讀取錯誤","存入檔案","你已經做了一些改動，確定要儲存了嗎？","寫入完成！","寫入錯誤!","上一張","下一張","儲存封面","儲存完成",
 					"讀取ID3封面","專輯名稱:","專輯演出者:","來源檔案:","關聯檔案","專輯類型:","專輯年份:","簡介","播放","重新載入",
-					"專輯註記:","你做了一些改動尚未儲存，確定要載入另外一個文件了嗎？","不支援此Cue檔","類型:","年份:","註記:","確定要寫入此封面到檔案嗎？"}
+					"專輯註記:","你做了一些改動尚未儲存，確定要載入另外一個文件了嗎？","不支援此Cue檔","類型:","年份:","註記:","確定要寫入此封面到檔案嗎？","按Enter來儲存"," 已儲存","尚未儲存"}
 			};
 	
 	private ReadMachine cueInput;
@@ -470,15 +476,54 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(isCue){
 					albumInfo[ReadMachine.ALBUM_TITLE] = albumTitleField.getText();
+				}else if(isCoverSpecific){
+					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
 				}else{
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_ALBUM_TITLE] = albumTitleField.getText();
 				}
+				albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
 			}
 		});
+		albumTitleField.addFocusListener(new FocusListener(){
+			@Override
+			public void focusGained(FocusEvent e) {
+				albumTitleFocusLabel.setText(languagePack[languageNumber][28]);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(isCoverSpecific){
+					if(albumTitleField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_TITLE])){
+						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(!isCue){
+					for(Object[] oa :trackInfo){
+						if(!albumTitleField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_TITLE])){
+							albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
+							break;
+						}
+						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
+					}
+				}else if(isCue){
+					if(albumTitleField.getText().equals(""+albumInfo[ReadMachine.ALBUM_TITLE])){
+						albumTitleFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumTitleFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}
+			}
+			
+		});
 		albumTitleField.setColumns(20);
+		
+		albumTitleFocusLabel = new JLabel();
+		albumTitleFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		albumTItilePad.add(albumTitleFocusLabel);
 		
 		JPanel albumPerformerPad = new JPanel();
 		FlowLayout flowLayout_1 = (FlowLayout) albumPerformerPad.getLayout();
@@ -492,16 +537,55 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(isCue){
 					albumInfo[ReadMachine.ALBUM_PERFORMER] = albumPerformerField.getText();
+				}else if(isCoverSpecific){
+					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
 				}else{
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_ALBUM_PERFORMER] = albumPerformerField.getText();
 				}
+				albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
 			}
 		});
+		albumPerformerField.addFocusListener(new FocusListener(){
+			@Override
+			public void focusGained(FocusEvent e) {
+				albumPerformerFocusLabel.setText(languagePack[languageNumber][28]);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(isCoverSpecific){
+					if(albumPerformerField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_ALBUM_PERFORMER])){
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(!isCue){
+					for(Object[] oa :trackInfo){
+						if(!albumPerformerField.getText().equals(""+oa[TagReadMachine.TRACK_ALBUM_PERFORMER])){
+							albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+							break;
+						}
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
+					}
+				}else if(isCue){
+					if(albumPerformerField.getText().equals(""+albumInfo[ReadMachine.ALBUM_PERFORMER])){
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumPerformerFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}
+			}
+			
+		});
 		albumPerformerPad.add(albumPerformerField);
 		albumPerformerField.setColumns(20);
+		
+		albumPerformerFocusLabel = new JLabel();
+		albumPerformerFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		albumPerformerPad.add(albumPerformerFocusLabel);
 		
 		JPanel albumFilePad = new JPanel();
 		FlowLayout flowLayout_2 = (FlowLayout) albumFilePad.getLayout();
@@ -581,16 +665,55 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(isCue){
 					albumInfo[ReadMachine.ALBUM_GENRE] = albumGenerateField.getText();
+				}else if(isCoverSpecific){
+					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
 				}else{
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_GENRE] = albumGenerateField.getText();
 				}
+				albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
 			}
 		});
+		albumGenerateField.addFocusListener(new FocusListener(){
+			@Override
+			public void focusGained(FocusEvent e) {
+				albumGenerateFocusLabel.setText(languagePack[languageNumber][28]);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(isCoverSpecific){
+					if(albumGenerateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_GENRE])){
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(!isCue){
+					for(Object[] oa :trackInfo){
+						if(!albumGenerateField.getText().equals(""+oa[TagReadMachine.TRACK_GENRE])){
+							albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+							break;
+						}
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
+					}
+				}else if(isCue){
+					if(albumGenerateField.getText().equals(""+albumInfo[ReadMachine.ALBUM_GENRE])){
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumGenerateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}
+			}
+			
+		});
 		albumGenerateField.setColumns(10);
 		albumGenerateAndDatePad.add(albumGenerateField);
+		
+		albumGenerateFocusLabel = new JLabel();
+		albumGenerateFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		albumGenerateAndDatePad.add(albumGenerateFocusLabel);
 		
 		albumDateLabel = new JLabel(languagePack[languageNumber][17]);
 		albumGenerateAndDatePad.add(albumDateLabel);
@@ -600,16 +723,56 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if(isCue){
 					albumInfo[ReadMachine.ALBUM_DATE] = albumDateField.getText();
+				}else if(isCoverSpecific){
+					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE] = albumDateField.getText();
 				}else{
 					for(Object[] oa : trackInfo)
 						oa[TagReadMachine.TRACK_DATE] = albumDateField.getText();
 				}
+				albumDateFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
 			}
 		});
+		albumDateField.addFocusListener(new FocusListener(){
+			@Override
+			public void focusGained(FocusEvent e) {
+				albumDateFocusLabel.setText(languagePack[languageNumber][28]);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(isCoverSpecific){
+					if(albumDateField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_DATE])){
+						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(!isCue){
+					for(Object[] oa :trackInfo){
+						if(!albumDateField.getText().equals(""+oa[TagReadMachine.TRACK_DATE])){
+							albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+							break;
+						}
+						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
+					}
+				}else if(isCue){
+					if(albumDateField.getText().equals(""+albumInfo[ReadMachine.ALBUM_DATE])){
+						albumDateFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumDateFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}
+			}
+			
+		});
 		albumDateField.setColumns(5);
 		albumGenerateAndDatePad.add(albumDateField);
+		
+		albumDateFocusLabel = new JLabel();
+		albumDateFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		albumGenerateAndDatePad.add(albumDateFocusLabel);
+		
 		
 		albumCommentPad = new JPanel();
 		FlowLayout flowLayout_4 = (FlowLayout) albumCommentPad.getLayout();
@@ -623,16 +786,55 @@ public class CueSheetGUI extends JFrame {
 			public void actionPerformed(ActionEvent e){
 				if(isCue){
 					albumInfo[ReadMachine.ALBUM_COMMENT] = albumCommentField.getText();
+				}else if(isCoverSpecific){
+					trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
 				}else{
 					for(Object[] oa: trackInfo)
 						oa[TagReadMachine.TRACK_COMMENT] = albumCommentField.getText();
 				}
+				albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
 				hasSomethingChanged = true;
 				testButton.setEnabled(true);
 			}
 		});
+		albumCommentField.addFocusListener(new FocusListener(){
+			@Override
+			public void focusGained(FocusEvent e) {
+				albumCommentFocusLabel.setText(languagePack[languageNumber][28]);
+			}
+
+			@Override
+			public void focusLost(FocusEvent e) {
+				if(isCoverSpecific){
+					if(albumCommentField.getText().equals(""+trackInfo[trackTable.getSelectedRows()[0]][TagReadMachine.TRACK_COMMENT])){
+						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}else if(!isCue){
+					for(Object[] oa :trackInfo){
+						if(!albumCommentField.getText().equals(""+oa[TagReadMachine.TRACK_COMMENT])){
+							albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
+							break;
+						}
+						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
+					}
+				}else if(isCue){
+					if(albumCommentField.getText().equals(""+albumInfo[ReadMachine.ALBUM_DATE])){
+						albumCommentFocusLabel.setText(languagePack[languageNumber][29]);
+					}else{
+						albumCommentFocusLabel.setText(languagePack[languageNumber][30]);	
+					}
+				}
+			}
+			
+		});
 		albumCommentField.setColumns(15);
 		albumCommentPad.add(albumCommentField);
+		
+		albumCommentFocusLabel = new JLabel();
+		albumCommentFocusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		albumCommentPad.add(albumCommentFocusLabel);
 		
 		albumInfoArea.add(Box.createGlue());
 		albumInfoArea.add(albumTItilePad);
