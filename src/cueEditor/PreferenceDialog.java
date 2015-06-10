@@ -17,6 +17,7 @@ import javax.swing.JTextField;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -28,9 +29,10 @@ public class PreferenceDialog extends JDialog {
 	private JTextField coverSaveField;
 	private String[] language = {"English","正體中文"};
 	private int languageNumber = 0;
+	private boolean isAskSave;
 	private final String[][] languagePack = {
-			{"Preference","Language:","Save Artwork named as "},
-			{"偏好設定","語言:","將專輯封面儲存為 "}
+			{"Preference","Language:","Save Artwork named as ","Don't ask me where to save"},
+			{"偏好設定","語言:","將專輯封面儲存為 ","一律直接覆蓋原始檔案"}
 	};
 
 	
@@ -46,7 +48,16 @@ public class PreferenceDialog extends JDialog {
 		default:
 			languageNumber = 0;
 		}
-		
+		switch(properties.getProperty("isAskSave", "true")){
+		case"true":
+			isAskSave = true;
+			break;
+		case"false":
+			isAskSave = false;
+			break;
+		default:
+			isAskSave = true;
+		}
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -89,6 +100,11 @@ public class PreferenceDialog extends JDialog {
 		JLabel coverSaveLabelB = new JLabel(".png");
 		coverSavePanel.add(coverSaveLabelB);
 		
+		JCheckBox isAskSaveCheckBox = new JCheckBox(languagePack[languageNumber][3]);
+		isAskSaveCheckBox.setSelected(isAskSave);
+		
+		contentPanel.add(isAskSaveCheckBox);
+		
 		contentPanel.add(Box.createGlue());
 		
 		JPanel buttonPane = new JPanel();
@@ -111,8 +127,15 @@ public class PreferenceDialog extends JDialog {
 				} catch (UnsupportedEncodingException e1) {
 					properties.setProperty("saveCoverName", "cover");
 				}
+				properties.setProperty("isAskSave", ""+isAskSaveCheckBox.isSelected());
+				File isExist = new File(System.getProperty("user.home")+"/Library/Application Support/simpleCueEditor/config.properties");
+				if(!isExist.exists()){
+					isExist = new File(System.getProperty("user.home")+"/Library/Application Support/simpleCueEditor");
+					isExist.mkdirs();
+				}
 				try {
-					properties.store(new FileOutputStream("Config.properties"), "SimpleCue Config");
+					
+					properties.store(new FileOutputStream(System.getProperty("user.home")+"/Library/Application Support/simpleCueEditor/config.properties"), "SimpleCue Config");
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}

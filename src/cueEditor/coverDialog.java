@@ -63,7 +63,6 @@ public class coverDialog extends JDialog {
 		});
 		buttonPane.add(okButton);
 		getRootPane().setDefaultButton(okButton);
-			
 		
 		setVisible(true);
 	}
@@ -74,20 +73,24 @@ public class coverDialog extends JDialog {
 			loadLabel[i].setIcon(new ImageIcon(ServiceMachine.resizeTo300(images[i])));
 			loadLabel[i].addMouseListener(new MouseAdapter(){
 				public void mousePressed(MouseEvent e){
-					if(SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2){
-						try {
-							File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
-							ImageIO.write(image, "png", ouput);
-							JOptionPane.showMessageDialog(contentPanel, languagePack[languageNumber][1]);
-						} catch (Exception ex) {
-							JOptionPane.showMessageDialog(contentPanel, ex.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
-							ex.printStackTrace();
+					if(SwingUtilities.isLeftMouseButton(e)){
+						if(e.getClickCount() == 1){
+							JOptionPane.showMessageDialog(contentPanel, new ImageIcon(image),"",JOptionPane.PLAIN_MESSAGE);
+						}else if(e.getClickCount() == 2){
+							try {
+								File ouput = new File(fileDirectory+"/"+saveCoverName+".png");
+								ImageIO.write(image, "png", ouput);
+								JOptionPane.showMessageDialog(contentPanel, languagePack[languageNumber][1]);
+							} catch (Exception ex) {
+								JOptionPane.showMessageDialog(contentPanel, ex.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
+								ex.printStackTrace();
+							}
 						}
 					}
 				}
 			});
-			contentPanel.add(loadLabel[i]);
 			i++;
+			
 		}
 		okButton.setEnabled(true);
 	}

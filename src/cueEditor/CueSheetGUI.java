@@ -48,6 +48,7 @@ import java.awt.FlowLayout;
 import java.awt.event.WindowAdapter;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.awt.Font;
 
 public class CueSheetGUI extends JFrame {
@@ -101,6 +102,7 @@ public class CueSheetGUI extends JFrame {
 	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
 	private boolean hasSomethingChanged = false;
 	private boolean isCoverSpecific = false;
+	private boolean isAskSave = true;
 	private Properties properties;
 	private String saveCoverName = "cover";
 	private int languageNumber = 0;
@@ -127,7 +129,7 @@ public class CueSheetGUI extends JFrame {
 	public static void main(String[] args) {
 		Properties properties = new Properties();
 		try{
-			properties.load(new FileInputStream("Config.properties"));
+			properties.load(new FileInputStream(System.getProperty("user.home")+"/Library/Application Support/simpleCueEditor/config.properties"));
 		}catch(Exception e){
 			properties = createDefaultProperties();
 		}
@@ -140,6 +142,7 @@ public class CueSheetGUI extends JFrame {
 		
 		properties.setProperty("language", "English");
 		properties.setProperty("saveCoverName", "cover");
+		properties.setProperty("isAskSave", ""+"true");
 		return properties;
 	}
 
@@ -163,8 +166,17 @@ public class CueSheetGUI extends JFrame {
 		default:
 			languageNumber = 0;
 		}
-		
-		setTitle("SimpleCueEditor v0.9");
+		switch(properties.getProperty("isAskSave", "true")){
+		case"true":
+			isAskSave = true;
+			break;
+		case"false":
+			isAskSave = false;
+			break;
+		default:
+			isAskSave = true;
+		}
+		setTitle("SimpleCueEditor v0.97");
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		addWindowListener(new WindowAdapter(){
@@ -256,9 +268,17 @@ public class CueSheetGUI extends JFrame {
 				if(hasSomethingChanged && fileType != IS_NO_FILE){
 					if(JOptionPane.showConfirmDialog(contentPane, languagePack[languageNumber][4]) == JOptionPane.YES_OPTION){
 						if(fileType == IS_CUE){
+							String savePath = fileDirectory+"/"+fileName;
+							if(!isAskSave){
+								FileDialog fileChooser = new FileDialog(new Frame(),languagePack[languageNumber][3],FileDialog.SAVE);
+								fileChooser.setDirectory(fileDirectory);
+								fileChooser.setModal(true);
+								fileChooser.setVisible(true);
+								savePath = fileChooser.getDirectory()+fileChooser.getFile();
+							}
 							WriteMachine wm = null;
 							try {
-								wm = new WriteMachine(fileDirectory+"/"+fileName,albumInfo,trackInfo,cueInput.getAlbumNotSupport(),cueInput.isMultiFileCue());
+								wm = new WriteMachine(savePath,albumInfo,trackInfo,cueInput.getAlbumNotSupport(),cueInput.isMultiFileCue());
 								JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][5]);
 								hasSomethingChanged = false;
 							} catch (Exception e1) {
@@ -386,10 +406,14 @@ public class CueSheetGUI extends JFrame {
 				if(hasCover && coverType == IS_GOOGLE){
 					coverDialog cd = new coverDialog(languageNumber);
 					try {
-						cd.setNine(service.getFourAlbumCover(),fileDirectory,saveCoverName);
+						BufferedImage[] covers = null;
+						covers = service.getFourAlbumCover();
+						
+						cd.setNine(covers,fileDirectory,saveCoverName);
 					} catch (Exception ex) {
 						cd.setFail();
 					}
+					
 				}
 			}
 		});
@@ -1200,7 +1224,7 @@ public class CueSheetGUI extends JFrame {
 		 
 		macApplication.setAboutHandler(new AboutHandler() {
 			public void handleAbout(AboutEvent e) {
-				JOptionPane.showMessageDialog(contentPane, "Simple Cue Sheet Editor \nby NasirHo", "About", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(contentPane, "Simple Cue Editor V0.9 1107\nby NasirHo @ 2015\n\nJSON :http://json.org/ \nJAudioTagger :http://www.jthink.net/jaudiotagger/", "About", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 
@@ -1236,6 +1260,16 @@ public class CueSheetGUI extends JFrame {
 			break;
 		default:
 			languageNumber = 0;
+		}
+		switch(properties.getProperty("isAskSave", "true")){
+		case"true":
+			isAskSave = true;
+			break;
+		case"false":
+			isAskSave = false;
+			break;
+		default:
+			isAskSave = true;
 		}
 		loadButton.setText(languagePack[languageNumber][1]);
 		testButton.setText(languagePack[languageNumber][3]);

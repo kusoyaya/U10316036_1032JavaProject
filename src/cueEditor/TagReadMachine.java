@@ -39,10 +39,13 @@ public class TagReadMachine {
 	private int i = -1;
 	
 	public static void main(String[] args){
+		
+		
 		File src = new File("/Users/nasirho/Desktop/test.m4a");
 		try {
 			AudioFile f = AudioFileIO.read(src);
 			Tag tag = f.getTag();
+			System.out.println(System.getProperty("user.home"));
 			System.out.println(tag.getFirst(FieldKey.ARTIST));
 			System.out.println(tag.getFirst(FieldKey.TITLE));
 			System.out.println(tag.getFirst(FieldKey.ALBUM));
@@ -60,15 +63,7 @@ public class TagReadMachine {
 			System.out.println(System.currentTimeMillis());
 			JOptionPane.showMessageDialog(null, new ImageIcon(coverImage));
 			System.out.println(System.currentTimeMillis());
-			//coverImage = ImageIO.read(TagReadMachine.class.getResourceAsStream("/icon.png"));
-			//ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			//ImageIO.write(coverImage, "png", baos);
-			//baos.flush();
-			//cover.setBinaryData(baos.toByteArray());
-			//baos.close();
-			cover = ArtworkFactory.createArtworkFromFile(new File("/Users/nasirho/Desktop/icon.png"));
-			tag.setField(cover);
-			f.commit();
+			
 		} catch (Exception e){
 			e.printStackTrace();
 		}
