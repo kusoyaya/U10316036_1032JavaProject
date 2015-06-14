@@ -3,6 +3,7 @@ package cueEditor;
 import java.awt.FileDialog;
 import java.awt.Frame;
 import java.awt.Image;
+import java.awt.Toolkit;
 
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
@@ -25,6 +26,7 @@ import javax.swing.JTextField;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 
@@ -38,6 +40,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
@@ -99,7 +102,7 @@ public class CueSheetGUI extends JFrame {
 	private String fileDirectory = "";
 	private String[] albumInfo;
 	private Object[][] trackInfo;
-	private String[] encode = {"UTF-8","Big5","GBK","Shift JIS"};
+	private String[] encode = {"UTF-8","Big5","GBK","Shift_JIS"};
 	private boolean hasSomethingChanged = false;
 	private boolean isCoverSpecific = false;
 	private boolean isAskSave = true;
@@ -113,10 +116,12 @@ public class CueSheetGUI extends JFrame {
 	private final String[][] languagePack = {
 			{"Some changes haven't saved yet, are you sure to close?","Load File","Load Error","Write File","You have done something changes, are you sure to save them?","Write successful!","Write Error!","Last","Next","Save Cover","Save completed",
 				"Read ID3 Cover","Album:","Album Artist:","Source File:","Connect File","Album Generate:","Album Year:","Info","Play","Reload",
-				"Album Comment:","Some changes haven't saved yet, are you sure to open another file?","Unsupported cue sheet","Generate:","Year:","Comment:","Are you sure to save this cover to audio file?","Press Enter to save","Saved","Unsave yet"},
+				"Album Comment:","Some changes haven't saved yet, are you sure to open another file?","Unsupported cue sheet","Generate:","Year:","Comment:","Are you sure to save this cover to audio file?","Press Enter to save","Saved","Unsave yet",
+				"Encode error or Cue Sheet Error\nError message: "},
 			{"你做了一些改動尚未儲存，確定要關閉了嗎？","讀取檔案","讀取錯誤","存入檔案","你已經做了一些改動，確定要儲存了嗎？","寫入完成！","寫入錯誤!","上一張","下一張","儲存封面","儲存完成",
 					"讀取ID3封面","專輯名稱:","專輯演出者:","來源檔案:","關聯檔案","專輯類型:","專輯年份:","簡介","播放","重新載入",
-					"專輯註記:","你做了一些改動尚未儲存，確定要載入另外一個文件了嗎？","不支援此Cue檔","類型:","年份:","註記:","確定要寫入此封面到檔案嗎？","按Enter來儲存"," 已儲存","尚未儲存"}
+					"專輯註記:","你做了一些改動尚未儲存，確定要載入另外一個文件了嗎？","不支援此Cue檔","類型:","年份:","註記:","確定要寫入此封面到檔案嗎？","按Enter來儲存"," 已儲存","尚未儲存",
+					"編碼錯誤或Cue檔格式錯誤\n錯誤訊息代碼: "}
 			};
 	
 	private ReadMachine cueInput;
@@ -986,7 +991,6 @@ public class CueSheetGUI extends JFrame {
 				}
 			}
 		});
-		
 		trackArea.setViewportView(trackTable);
 		
 		
@@ -1020,7 +1024,7 @@ public class CueSheetGUI extends JFrame {
 					fileName = selectedFiles[0].getName();
 					fileDirectory = selectedFiles[0].getParent();
 					
-					setTitle(getTitle()+" - "+fileName);
+					setTitle("SimpleCueEditor v0.97 - "+fileName);
 					setAlbumField();
 					setTable();
 					encodeBox.setEnabled(true);
@@ -1032,9 +1036,9 @@ public class CueSheetGUI extends JFrame {
 					});
 					loadCoverProcess.start();
 				} catch(CueNotSupportException e2){
-					JOptionPane.showMessageDialog(contentPane, e2.getMessage(), languagePack[languageNumber][23], JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][31]+e2.getMessage(), languagePack[languageNumber][23], JOptionPane.ERROR_MESSAGE);
 				}catch (Exception e1) {
-					JOptionPane.showMessageDialog(contentPane, e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(contentPane, languagePack[languageNumber][31]+e1.getMessage(), languagePack[languageNumber][2], JOptionPane.ERROR_MESSAGE);
 				}
 				
 			}else{
@@ -1054,7 +1058,8 @@ public class CueSheetGUI extends JFrame {
 					filePath = selectedFiles[0].getAbsolutePath();
 					fileName = selectedFiles[0].getName();
 					fileDirectory = selectedFiles[0].getParent();
-					
+
+					setTitle("SimpleCueEditor v0.97 - "+fileName);
 					setAlbumField();
 					setTagTable();
 					encodeBox.setEnabled(false);
@@ -1172,6 +1177,7 @@ public class CueSheetGUI extends JFrame {
 	private void showPopUp(MouseEvent e , int[] rowNumbers){
 		JPopupMenu popupMenu = new JPopupMenu();
 		JMenuItem menuInfo = new JMenuItem(languagePack[languageNumber][18]);
+		menuInfo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I,Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()));
 		menuInfo.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e) {
 				if(fileType == IS_CUE){
@@ -1224,7 +1230,7 @@ public class CueSheetGUI extends JFrame {
 		 
 		macApplication.setAboutHandler(new AboutHandler() {
 			public void handleAbout(AboutEvent e) {
-				JOptionPane.showMessageDialog(contentPane, "Simple Cue Editor V0.9 1107\nby NasirHo @ 2015\n\nJSON :http://json.org/ \nJAudioTagger :http://www.jthink.net/jaudiotagger/", "About", JOptionPane.INFORMATION_MESSAGE);
+				JOptionPane.showMessageDialog(contentPane, "Simple Cue Editor V0.9 1139\nby NasirHo @ 2015\n\nJSON :http://json.org/ \nJAudioTagger :http://www.jthink.net/jaudiotagger/", "About", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 

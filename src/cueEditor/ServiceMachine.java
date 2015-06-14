@@ -148,6 +148,7 @@ public class ServiceMachine {
 										"delay 1\n"+
 										"pause\n"+
 										"seekto "+location+"\n"+
+										"delay 1\n"+
 										"play\n"+
 									"end tell\n"+
 								"end tell\n"+
