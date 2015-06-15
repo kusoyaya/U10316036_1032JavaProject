@@ -164,4 +164,20 @@ public class ServiceMachine {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void playWithQuickLook(String filePath){
+		String script = "tell application \"Finder\"\n"+
+							"activate\n"+
+							"select (\""+filePath+"\" as POSIX file)\n"+
+							"delay 1\n"+
+							"tell application \"System Events\" to key code 49\n"+
+						"end tell\n";
+		ScriptEngineManager mgr = new ScriptEngineManager();
+        ScriptEngine engine = mgr.getEngineByName("AppleScriptEngine");
+        try {
+			engine.eval(script);
+		} catch (ScriptException e) {
+			e.printStackTrace();
+		}
+	}
 }

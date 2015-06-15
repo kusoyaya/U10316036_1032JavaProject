@@ -16,6 +16,7 @@ import javax.swing.JTable;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 
+import javax.swing.AbstractAction;
 import javax.swing.Box;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -989,6 +990,39 @@ public class CueSheetGUI extends JFrame {
 					}
 					showPopUp(e,trackTable.getSelectedRows());
 				}
+			}
+		});
+		trackTable.getInputMap().put(KeyStroke.getKeyStroke("SPACE"), "play");
+		trackTable.getActionMap().put("play", new AbstractAction(){
+			public void actionPerformed(ActionEvent e) {
+				if(fileType == IS_ID3 && isCoverSpecific)
+					ServiceMachine.playWithQuickLook(""+trackInfo[trackTable.getSelectedRow()][TagReadMachine.FILE_PATH]);
+			}
+			
+		});
+		trackTable.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_I,Toolkit.getDefaultToolkit().getMenuShortcutKeyMask()), "info");
+		trackTable.getActionMap().put("info", new AbstractAction(){
+			public void actionPerformed(ActionEvent e){
+				int[] rowNumbers = trackTable.getSelectedRows();
+				if(rowNumbers.length > 0){
+					if(fileType == IS_CUE){
+						TrackInfoDialog td = new TrackInfoDialog(rowNumbers,albumInfo,trackInfo,languageNumber);
+						if(td.hasChanged()){
+							hasSomethingChanged = true;
+							testButton.setEnabled(true);
+							setAlbumField();
+						}
+					}else if (fileType == IS_ID3){
+						TagTrackInfoDialog ttd = new TagTrackInfoDialog(rowNumbers,trackInfo,languageNumber);
+						if(ttd.hasChanged()){
+							hasSomethingChanged = true;
+							testButton.setEnabled(true);
+							albumInfo = TagReadMachine.getAlbum(trackInfo);
+							setAlbumField();
+						}
+					}
+				}
+				
 			}
 		});
 		trackArea.setViewportView(trackTable);
